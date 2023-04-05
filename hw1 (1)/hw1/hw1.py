@@ -45,8 +45,6 @@ def apply_bias_trick(X):
     # TODO: Implement the bias trick by adding a column of ones to the data.                             #
     ###########################################################################
     X = np.column_stack((np.ones_like(X), X.reshape(-1, 1)))
-
-    print(X)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -70,8 +68,7 @@ def compute_cost(X, y, theta):
     ###########################################################################
     # TODO: Implement the MSE cost function.                                  #
     ###########################################################################
-    X, y = preprocess(X, y)
-    J = ((np.dot(theta, X.T) - y) ** 2) / (2 * len(X))
+    J = np.sum(((np.dot(theta, X.T) - y) ** 2)) / (2 * len(X))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -103,7 +100,13 @@ def gradient_descent(X, y, theta, alpha, num_iters):
     ###########################################################################
     # TODO: Implement the gradient descent optimization algorithm.            #
     ###########################################################################
-    pass
+    for i in range(num_iters):
+        temp0 = theta[0] - (np.sum(alpha * (np.dot(theta, X.T) - y)) / len(X))
+        temp1 = theta[1] - (np.sum(alpha * (np.dot(theta, X.T) - y) * X.T) / len(X))
+        theta[0] = temp0
+        theta[1] = temp1
+        J = compute_cost(X, y, theta)
+        J_history.append(J)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
