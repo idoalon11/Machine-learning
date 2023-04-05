@@ -44,7 +44,9 @@ def apply_bias_trick(X):
     ###########################################################################
     # TODO: Implement the bias trick by adding a column of ones to the data.                             #
     ###########################################################################
-    X = np.concatenate((np.ones((len(X), 1)), np.expand_dims(X, axis=1)), axis=1)
+    X = np.column_stack((np.ones_like(X), X.reshape(-1, 1)))
+
+    print(X)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -69,7 +71,7 @@ def compute_cost(X, y, theta):
     # TODO: Implement the MSE cost function.                                  #
     ###########################################################################
     X, y = preprocess(X, y)
-    J = ((np.dot(theta, apply_bias_trick(X)) - y) ** 2) / (2 * len(X))
+    J = ((np.dot(theta, X.T) - y) ** 2) / (2 * len(X))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
