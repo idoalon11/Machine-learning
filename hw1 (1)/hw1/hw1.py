@@ -68,11 +68,12 @@ def compute_cost(X, y, theta):
     ###########################################################################
     # TODO: Implement the MSE cost function.                                  #
     ###########################################################################
-    J = np.sum(((np.dot(theta, X.T) - y) ** 2)) / (2 * len(X))
+    J = np.sum(((np.dot(X, theta) - y) ** 2)) / (2 * len(X))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return J
+
 
 def gradient_descent(X, y, theta, alpha, num_iters):
     """
@@ -100,17 +101,20 @@ def gradient_descent(X, y, theta, alpha, num_iters):
     ###########################################################################
     # TODO: Implement the gradient descent optimization algorithm.            #
     ###########################################################################
+
     for i in range(num_iters):
-        temp0 = theta[0] - (np.sum(alpha * (np.dot(theta, X.T) - y)) / len(X))
-        temp1 = theta[1] - (np.sum(alpha * (np.dot(theta, X.T) - y) * X.T) / len(X))
+        temp0 = theta[0] - alpha * ((np.sum((np.dot(X, theta) - y))) / len(X))
+        temp1 = theta[1] - alpha * ((np.sum(np.dot(X.T, (np.dot(X, theta) - y)))) / len(X))
         theta[0] = temp0
         theta[1] = temp1
+        # theta = theta - alpha * (np.dot(X.T, (np.dot(X, theta) - y))) / len(X)
         J = compute_cost(X, y, theta)
         J_history.append(J)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return theta, J_history
+
 
 def compute_pinv(X, y):
     """
@@ -124,20 +128,22 @@ def compute_pinv(X, y):
     Input:
     - X: Input data (m instances over n features).
     - y: True labels (m instances).
-
     Returns:
     - pinv_theta: The optimal parameters of your model.
     """
     
     pinv_theta = []
     ###########################################################################
-    # TODO: Implement the pseudoinverse algorithm.                            #
+    # TODO: Implement the pseudo-inverse algorithm.                            #
     ###########################################################################
-    pass
+    X_dot_XT = np.dot(X.T, X)
+    X_dot_XT_inverse = np.linalg.inv(X_dot_XT)
+    pinv_theta = np.dot(np.dot(X_dot_XT_inverse, X.T), y)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return pinv_theta
+
 
 def efficient_gradient_descent(X, y, theta, alpha, num_iters):
     """
