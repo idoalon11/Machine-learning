@@ -42,9 +42,10 @@ def apply_bias_trick(X):
         zeroth position (m instances over n+1 features).
     """
     ###########################################################################
-    # TODO: Implement the bias trick by adding a column of ones to the data.                             #
+    # TODO: Implement the bias trick by adding a column of ones to the data. #
     ###########################################################################
-    X = np.column_stack((np.ones_like(X), X.reshape(-1, 1)))
+    new_ones = np.ones((len(X), 1))
+    X = np.column_stack((new_ones, X))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
