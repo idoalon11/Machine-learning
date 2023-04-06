@@ -228,10 +228,26 @@ def forward_feature_selection(X_train, y_train, X_val, y_val, best_alpha, iterat
     - selected_features: A list of selected top 5 feature indices
     """
     selected_features = []
+    feature_dict = {}
     #####c######################################################################
     # TODO: Implement the function and find the best alpha value.             #
     ###########################################################################
-    pass
+    while len(selected_features) < 5:
+        for feature_idx in range(X_train.shape[1]):
+            if feature_idx not in selected_features:
+                selected_features.append(feature_idx)
+                selected_X_train = apply_bias_trick(X_train[:, selected_features])
+                selected_X_val = apply_bias_trick(X_val[:, selected_features])
+
+                np.random.seed(42)
+                theta = np.random.random(size=len(selected_features) + 1)
+
+                theta, _ = efficient_gradient_descent(selected_X_train, y_train, theta, best_alpha, iterations)
+                feature_dict[feature_idx] = compute_cost(selected_X_val, y_val, theta)
+                selected_features.remove(feature_idx)
+
+        best_feature = min(feature_dict, key=feature_dict.get)
+        selected_features.append(best_feature)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
