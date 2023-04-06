@@ -101,13 +101,8 @@ def gradient_descent(X, y, theta, alpha, num_iters):
     ###########################################################################
     # TODO: Implement the gradient descent optimization algorithm.            #
     ###########################################################################
-
     for i in range(num_iters):
-        temp0 = theta[0] - alpha * ((np.sum((np.dot(X, theta) - y))) / len(X))
-        temp1 = theta[1] - alpha * ((np.sum(np.dot(X.T, (np.dot(X, theta) - y)))) / len(X))
-        theta[0] = temp0
-        theta[1] = temp1
-        # theta = theta - alpha * (np.dot(X.T, (np.dot(X, theta) - y))) / len(X)
+        theta = theta - alpha * (np.dot(X.T, (np.dot(X, theta) - y))) / len(X)
         J = compute_cost(X, y, theta)
         J_history.append(J)
     ###########################################################################
@@ -136,9 +131,8 @@ def compute_pinv(X, y):
     ###########################################################################
     # TODO: Implement the pseudo-inverse algorithm.                            #
     ###########################################################################
-    X_dot_XT = np.dot(X.T, X)
-    X_dot_XT_inverse = np.linalg.inv(X_dot_XT)
-    pinv_theta = np.dot(np.dot(X_dot_XT_inverse, X.T), y)
+    pinv_x = np.dot(np.linalg.inv(np.dot(X.T, X)), X.T)
+    pinv_theta = np.dot(pinv_x, y)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -169,7 +163,15 @@ def efficient_gradient_descent(X, y, theta, alpha, num_iters):
     ###########################################################################
     # TODO: Implement the efficient gradient descent optimization algorithm.  #
     ###########################################################################
-    pass
+    theta = theta - alpha * (np.dot(X.T, (np.dot(X, theta) - y))) / len(X)
+    J = compute_cost(X, y, theta)
+    J_history.append(J)
+    for i in range(1, num_iters):
+        theta = theta - alpha * (np.dot(X.T, (np.dot(X, theta) - y))) / len(X)
+        J = compute_cost(X, y, theta)
+        if J_history[i-1] - J < 1e-8:
+            break
+        J_history.append(J)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -196,7 +198,11 @@ def find_best_alpha(X_train, y_train, X_val, y_val, iterations):
     ###########################################################################
     # TODO: Implement the function and find the best alpha value.             #
     ###########################################################################
-    pass
+    for alpha in alphas:
+        np.random.seed(42)
+        theta = np.random.random(size=2)
+        theta, J_history = efficient_gradient_descent(X_train, y_train, theta, alpha, iterations)
+        alpha_dict[alpha] = compute_cost(X_val, y_val, theta)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
