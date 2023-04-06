@@ -264,12 +264,39 @@ def create_square_features(df):
     - df_poly: The input data with polynomial features added as a dataframe
                with appropriate feature names
     """
+    from itertools import combinations_with_replacement
 
     df_poly = df.copy()
     ###########################################################################
     # TODO: Implement the function to add polynomial features                 #
     ###########################################################################
-    pass
+    # for feature in df.columns:
+    #     df_poly[feature + '^2'] = df[feature] ** 2
+    #
+    #     for pair in combinations_with_replacement(df.columns, 2):
+    #
+    #         if feature in pair:
+    #             continue
+    #
+    #         interaction_name = pair[0] + '*' + pair[1]
+    #         interaction_value = df[pair[0]] * df[pair[1]]
+    #         df_poly[interaction_name] = interaction_value
+    new_columns = []
+    for i, feature in enumerate(df.columns):
+        for j in range(i, len(df.columns)):
+            other_feature = df.columns[j]
+            if feature == other_feature:
+                feature_name = feature + '^2'
+            else:
+                feature_name = feature + '*' + other_feature
+
+            if feature_name not in df_poly.columns:
+                multipy_feature = df[feature] * df[other_feature]
+                new_column = pd.DataFrame({feature_name: multipy_feature})
+                new_columns.append(new_column)
+
+    df_poly = pd.concat([df_poly] + new_columns, axis=1)
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
