@@ -51,6 +51,7 @@ def apply_bias_trick(X):
     ###########################################################################
     return X
 
+
 def compute_cost(X, y, theta):
     """
     Computes the average squared difference between an observation's actual and
@@ -209,6 +210,7 @@ def find_best_alpha(X_train, y_train, X_val, y_val, iterations):
     ###########################################################################
     return alpha_dict
 
+
 def forward_feature_selection(X_train, y_train, X_val, y_val, best_alpha, iterations):
     """
     Forward feature selection is a greedy, iterative algorithm used to 
@@ -229,7 +231,7 @@ def forward_feature_selection(X_train, y_train, X_val, y_val, best_alpha, iterat
     """
     selected_features = []
     feature_dict = {}
-    #####c######################################################################
+    ###########################################################################
     # TODO: Implement the function and find the best alpha value.             #
     ###########################################################################
     while len(selected_features) < 5:
@@ -253,6 +255,7 @@ def forward_feature_selection(X_train, y_train, X_val, y_val, best_alpha, iterat
     ###########################################################################
     return selected_features
 
+
 def create_square_features(df):
     """
     Create square features for the input data.
@@ -264,39 +267,23 @@ def create_square_features(df):
     - df_poly: The input data with polynomial features added as a dataframe
                with appropriate feature names
     """
-    from itertools import combinations_with_replacement
 
     df_poly = df.copy()
     ###########################################################################
     # TODO: Implement the function to add polynomial features                 #
     ###########################################################################
-    # for feature in df.columns:
-    #     df_poly[feature + '^2'] = df[feature] ** 2
-    #
-    #     for pair in combinations_with_replacement(df.columns, 2):
-    #
-    #         if feature in pair:
-    #             continue
-    #
-    #         interaction_name = pair[0] + '*' + pair[1]
-    #         interaction_value = df[pair[0]] * df[pair[1]]
-    #         df_poly[interaction_name] = interaction_value
-    new_columns = []
     for i, feature in enumerate(df.columns):
         for j in range(i, len(df.columns)):
-            other_feature = df.columns[j]
-            if feature == other_feature:
-                feature_name = feature + '^2'
+            second_feature = df.columns[j]
+            if feature != second_feature:
+                column_feature_name = feature + '*' + second_feature
             else:
-                feature_name = feature + '*' + other_feature
+                column_feature_name = feature + '^2'
 
-            if feature_name not in df_poly.columns:
-                multipy_feature = df[feature] * df[other_feature]
-                new_column = pd.DataFrame({feature_name: multipy_feature})
-                new_columns.append(new_column)
-
-    df_poly = pd.concat([df_poly] + new_columns, axis=1)
-
+            if column_feature_name not in df_poly.columns:
+                new_values_feature = df[feature] * df[second_feature]
+                new_column = pd.DataFrame({column_feature_name: new_values_feature})
+                df_poly = pd.concat([df_poly] + [new_column], axis=1)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
