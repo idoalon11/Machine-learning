@@ -113,8 +113,8 @@ def calc_entropy(data):
     # we did loop to make the code generic and suitable to any number of labels
     for c in labels:
         s_i = np.count_nonzero(data[:, -1] == c)
-        sigma = sigma + ((s_i / s) * np.log2(s_i / s))
-
+        if not s_i == 0:
+            sigma = sigma + ((s_i / s) * np.log2(s_i / s))
     entropy = -sigma
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -143,14 +143,23 @@ def goodness_of_split(data, feature, impurity_func, gain_ratio=False):
     # TODO: Implement the function.                                           #
     ###########################################################################
     sigma = 0
+    s = len(data)
+    splitInformation = 1
+    if gain_ratio:
+        for value in np.unique(data[:, feature]):
+            s_a = np.count_nonzero(data[:, feature] == value)
+            if not s_a == 0:
+                sigma = sigma + ((s_a / s) * np.log2(s_a / s))
+            splitInformation = - sigma
 
+    sigma = 0
     for value in np.unique(data[:, feature]):
         groups[value] = data[data[:, feature] == value]
 
     for key, value in groups.items():
         sigma = sigma + (len(value) / len(data)) * impurity_func(value)
 
-    goodness = impurity_func(data) - sigma
+    goodness = (impurity_func(data) - sigma) / splitInformation
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
