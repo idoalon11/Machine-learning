@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 ### Chi square table values ###
-# The first key is the degree of freedom 
+# The first key is the degree of freedom
 # The second key is the p-value cut-off
 # The values are the chi-statistic that you need to use in the pruning
 
@@ -65,10 +65,10 @@ chi_table = {1: {0.5 : 0.45,
 def calc_gini(data):
     """
     Calculate gini impurity measure of a dataset.
- 
+
     Input:
     - data: any dataset where the last column holds the labels.
- 
+
     Returns:
     - gini: The gini impurity value.
     """
@@ -76,7 +76,15 @@ def calc_gini(data):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    labels = ['e', 'p']
+    s = len(data)
+    sigma = 0
+
+    # we did loop to make the code generic and suitable to any number of labels
+    for c in labels:
+        sigma = sigma + (np.count_nonzero(data[:, -1] == c)/s) ** 2
+
+    gini = 1 - sigma
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -96,7 +104,16 @@ def calc_entropy(data):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    labels = ['e', 'p']
+    s = len(data)
+    sigma = 0
+
+    # we did loop to make the code generic and suitable to any number of labels
+    for c in labels:
+        s_i = np.count_nonzero(data[:, -1] == c)
+        sigma = sigma + ((s_i / s) * np.log2(s_i / s))
+
+    entropy = -sigma
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -131,7 +148,7 @@ def goodness_of_split(data, feature, impurity_func, gain_ratio=False):
 class DecisionNode:
 
     def __init__(self, data, feature=-1,depth=0, chi=1, max_depth=1000, gain_ratio=False):
-        
+
         self.data = data # the relevant data for the node
         self.feature = feature # column index of criteria being tested
         self.pred = self.calc_node_pred() # the prediction of the node
@@ -139,10 +156,10 @@ class DecisionNode:
         self.children = [] # array that holds this nodes children
         self.children_values = []
         self.terminal = False # determines if the node is a leaf
-        self.chi = chi 
+        self.chi = chi
         self.max_depth = max_depth # the maximum allowed depth of the tree
-        self.gain_ratio = gain_ratio 
-    
+        self.gain_ratio = gain_ratio
+
     def calc_node_pred(self):
         """
         Calculate the node prediction.
@@ -159,7 +176,7 @@ class DecisionNode:
         #                             END OF YOUR CODE                            #
         ###########################################################################
         return pred
-        
+
     def add_child(self, node, val):
         """
         Adds a child node to self.children and updates self.children_values
@@ -168,7 +185,7 @@ class DecisionNode:
         """
         self.children.append(node)
         self.children_values.append(val)
-     
+
     def split(self, impurity_func):
 
         """
@@ -191,7 +208,7 @@ class DecisionNode:
 
 def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
     """
-    Build a tree using the given impurity measure and training dataset. 
+    Build a tree using the given impurity measure and training dataset.
     You are required to fully grow the tree until all leaves are pure unless
     you are using pruning
 
@@ -216,12 +233,12 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
 def predict(root, instance):
     """
     Predict a given instance using the decision tree
- 
+
     Input:
     - root: the root of the decision tree.
-    - instance: an row vector from the dataset. Note that the last element 
+    - instance: an row vector from the dataset. Note that the last element
                 of this vector is the label of the instance.
- 
+
     Output: the prediction of the instance.
     """
     pred = None
@@ -237,11 +254,11 @@ def predict(root, instance):
 def calc_accuracy(node, dataset):
     """
     Predict a given dataset using the decision tree and calculate the accuracy
- 
+
     Input:
     - node: a node in the decision tree.
     - dataset: the dataset on which the accuracy is evaluated
- 
+
     Output: the accuracy of the decision tree on the given dataset (%).
     """
     accuracy = 0
@@ -263,7 +280,7 @@ def depth_pruning(X_train, X_test):
     Input:
     - X_train: the training data where the last column holds the labels
     - X_test: the testing data where the last column holds the labels
- 
+
     Output: the training and testing accuracies per max depth
     """
     training = []
@@ -284,12 +301,12 @@ def chi_pruning(X_train, X_test):
     """
     Calculate the training and testing accuracies for different chi values
     using the best impurity function and the gain_ratio flag you got
-    previously. 
+    previously.
 
     Input:
     - X_train: the training data where the last column holds the labels
     - X_test: the testing data where the last column holds the labels
- 
+
     Output:
     - chi_training_acc: the training accuracy per chi value
     - chi_testing_acc: the testing accuracy per chi value
@@ -310,10 +327,10 @@ def chi_pruning(X_train, X_test):
 def count_nodes(node):
     """
     Count the number of node in a given tree
- 
+
     Input:
     - node: a node in the decision tree.
- 
+
     Output: the number of nodes in the tree.
     """
     n_nodes = None
