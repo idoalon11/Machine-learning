@@ -145,6 +145,7 @@ def goodness_of_split(data, feature, impurity_func, gain_ratio=False):
     sigma = 0
     s = len(data)
     splitInformation = 1
+
     if gain_ratio:
         for value in np.unique(data[:, feature]):
             s_a = np.count_nonzero(data[:, feature] == value)
@@ -153,6 +154,7 @@ def goodness_of_split(data, feature, impurity_func, gain_ratio=False):
             splitInformation = - sigma
 
     sigma = 0
+
     for value in np.unique(data[:, feature]):
         groups[value] = data[data[:, feature] == value]
 
@@ -192,7 +194,10 @@ class DecisionNode:
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        if np.count_nonzero(self.data[:, -1] == 'p') > np.count_nonzero(self.data[:, -1] == 'e'):
+            pred = 'p'
+        else:
+            pred = 'e'
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -222,10 +227,29 @@ class DecisionNode:
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
+        best_attribute_value = 0
+        best_attribute = None
+        best_attribute_dict = {}
+
+        # find the best feature
+        for feature in np.nditer(self.data.T):
+            current_feature_value, current_feature_dict = goodness_of_split(self.data, feature, impurity_func, self.gain_ratio)
+            if current_feature_value > best_attribute_value:
+                best_attribute_value = current_feature_value
+                best_attribute = feature
+                best_attribute_dict = current_feature_dict
+
+        self.feature = best_attribute
+
+        # create the corresponding children
+        for value, data in best_attribute_dict.items():
+            new_child = self.__init__(data)
+            self.add_child(new_child, value)
+
 
 def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
     """
@@ -245,14 +269,12 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    e_lable = np.count_nonzero(data[:, -1] == 'e') / len(data)
-    p_lable = np.count_nonzero(data[:, -1] == 'p') / len(data)
-
-    gini = 1 - (e_lable ** 2 + p_lable ** 2)
+    pass
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return root
+
 
 def predict(root, instance):
     """
@@ -269,13 +291,7 @@ def predict(root, instance):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    e_lable = np.count_nonzero(data[:, -1] == 'e') / len(data)
-    entropy_e_lable = e_lable * np.log2(e_lable + 1e-10)
-
-    p_lable = np.count_nonzero(data[:, -1] == 'p') / len(data)
-    entropy_p_lable = p_lable * np.log2(p_lable + 1e-10)
-
-    entropy = (-1) * (entropy_e_lable + entropy_p_lable)
+    pass
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
