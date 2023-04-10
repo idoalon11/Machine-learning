@@ -1,3 +1,5 @@
+import queue
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -236,7 +238,7 @@ class DecisionNode:
         best_attribute_dict = {}
 
         # find the best feature
-        for feature in np.nditer(self.data.T):
+        for feature in range(self.data.shape[1]):
             current_feature_value, current_feature_dict = goodness_of_split(self.data, feature, impurity_func, self.gain_ratio)
             if current_feature_value > best_attribute_value:
                 best_attribute_value = current_feature_value
@@ -247,7 +249,7 @@ class DecisionNode:
 
         # create the corresponding children
         for value, data in best_attribute_dict.items():
-            new_child = self.__init__(data)
+            new_child = DecisionNode(data)
             self.add_child(new_child, value)
 
 
@@ -269,12 +271,33 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    nodes_queue = queue.Queue()
+    root = DecisionNode(data)
+    nodes_queue.put(root)
+    while not nodes_queue.empty():
+
+        n = nodes_queue.get()
+        if perfectlyClassified(n):
+            print("here")
+        else:
+            feature_dict = {}
+            for feature in range(n.data.shape[1]):
+                feature_dict[feature] = goodness_of_split(data, feature, impurity, gain_ratio)
+            n.feature = max(feature_dict, key=feature_dict.get)
+
+            n.split(impurity)
+
+            for child in n.children:
+                nodes_queue.put(child)
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return root
 
+def perfectlyClassified(n):
+    pred = n.data[0, -1]
+    return not np.count_nonzero(n.data[:, -1] != pred) > 0
 
 def predict(root, instance):
     """
@@ -291,7 +314,13 @@ def predict(root, instance):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    e_lable = np.count_nonzero(data[:, -1] == 'e') / len(data)
+    entropy_e_lable = e_lable * np.log2(e_lable + 1e-10)
+
+    p_lable = np.count_nonzero(data[:, -1] == 'p') / len(data)
+    entropy_p_lable = p_lable * np.log2(p_lable + 1e-10)
+
+    entropy = (-1) * (entropy_e_lable + entropy_p_lable)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -312,6 +341,7 @@ def calc_accuracy(node, dataset):
     # TODO: Implement the function.                                           #
     ###########################################################################
     pass
+    # maybe to implement later
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -336,6 +366,7 @@ def depth_pruning(X_train, X_test):
     ###########################################################################
     for max_depth in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
         pass
+    # implemet later
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -365,6 +396,7 @@ def chi_pruning(X_train, X_test):
     # TODO: Implement the function.                                           #
     ###########################################################################
     pass
+    # implement later
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
