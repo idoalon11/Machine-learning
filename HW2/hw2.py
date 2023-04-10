@@ -62,6 +62,7 @@ chi_table = {1: {0.5 : 0.45,
               0.05 : 19.68,
               0.0001 : 100000}}
 
+
 def calc_gini(data):
     """
     Calculate gini impurity measure of a dataset.
@@ -89,6 +90,7 @@ def calc_gini(data):
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return gini
+
 
 def calc_entropy(data):
     """
@@ -119,6 +121,7 @@ def calc_entropy(data):
     ###########################################################################
     return entropy
 
+
 def goodness_of_split(data, feature, impurity_func, gain_ratio=False):
     """
     Calculate the goodness of split of a dataset given a feature and impurity function.
@@ -135,15 +138,24 @@ def goodness_of_split(data, feature, impurity_func, gain_ratio=False):
               according to the feature values.
     """
     goodness = 0
-    groups = {} # groups[feature_value] = data_subset
+    groups = {}  # groups[feature_value] = data_subset
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    sigma = 0
+
+    for value in np.unique(data[:, feature]):
+        groups[value] = data[data[:, feature] == value]
+
+    for key, value in groups.items():
+        sigma = sigma + (len(value) / len(data)) * impurity_func(value)
+
+    goodness = impurity_func(data) - sigma
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return goodness, groups
+
 
 class DecisionNode:
 
@@ -224,7 +236,10 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    e_lable = np.count_nonzero(data[:, -1] == 'e') / len(data)
+    p_lable = np.count_nonzero(data[:, -1] == 'p') / len(data)
+
+    gini = 1 - (e_lable ** 2 + p_lable ** 2)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -245,7 +260,13 @@ def predict(root, instance):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    e_lable = np.count_nonzero(data[:, -1] == 'e') / len(data)
+    entropy_e_lable = e_lable * np.log2(e_lable + 1e-10)
+
+    p_lable = np.count_nonzero(data[:, -1] == 'p') / len(data)
+    entropy_p_lable = p_lable * np.log2(p_lable + 1e-10)
+
+    entropy = (-1) * (entropy_e_lable + entropy_p_lable)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
