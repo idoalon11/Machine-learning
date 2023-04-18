@@ -253,7 +253,7 @@ class DecisionNode:
             new_child = DecisionNode(value)
             self.add_child(new_child, key)
             new_child.depth = self.depth + 1
-            new_child.selected_feature = self.selected_feature
+            new_child.selected_feature = self.selected_feature.copy()
 
 
 def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
@@ -280,11 +280,10 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
 
     while not nodes_queue.empty():
         n = nodes_queue.get()
-        if perfectlyClassified(n) or n.depth == max_depth or len(n.selected_feature) == 21:
+        if perfectlyClassified(n) or n.depth == 1000: #or len(n.selected_feature) == 21:
             n.terminal = True
         else:
             n.split(impurity)
-            print(n.feature)
             for child in n.children:
                 nodes_queue.put(child)
 
