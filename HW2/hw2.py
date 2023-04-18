@@ -244,25 +244,21 @@ class DecisionNode:
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
-        best_attribute_value = 0
-        best_attribute = None
-        best_attribute_dict = {}
+        feature_dict = {}
+        for i in range(self.data.shape[1] - 1):
+            feature_dict[i] = goodness_of_split(self.data, i, impurity_func, self.gain_ratio)
 
-        # find the best feature
-        for feature in range(self.data.shape[1] - 1):
-            current_feature_value, current_feature_dict = goodness_of_split(self.data, feature, impurity_func, self.gain_ratio)
-            if current_feature_value > best_attribute_value:
-                best_attribute_value = current_feature_value
-                best_attribute = feature
-                best_attribute_dict = current_feature_dict
-
-        # self.feature = best_attribute
+        self.feature = max(feature_dict, key=feature_dict.get)
+        # while self.feature in selected_features:
+        #     feature_dict.pop(self.feature)
+        #     self.feature = max(feature_dict, key=feature_dict.get)
+        # selected_features.append(self.feature)
 
         # create the corresponding children
-        for value, data in best_attribute_dict.items():
-            new_child = DecisionNode(data)
+        for key, value in feature_dict[self.feature][1].items():
+            new_child = DecisionNode(value)
+            self.add_child(new_child, key)
             new_child.depth = self.depth + 1
-            self.add_child(new_child, value)
 
 
 def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
@@ -286,24 +282,12 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
     nodes_queue = queue.Queue()
     root = DecisionNode(data)
     nodes_queue.put(root)
-    selected_features = []
 
     while not nodes_queue.empty():
         n = nodes_queue.get()
-        if perfectlyClassified(n) or len(selected_features) == data.shape[1] - 1:
+        if perfectlyClassified(n): #or len(selected_features) == data.shape[1] - 1:
             n.terminal = True
         else:
-            feature_dict = {}
-            for feature in range(n.data.shape[1] - 1):
-                 feature_dict[feature], _ = goodness_of_split(data, feature, impurity, gain_ratio)
-
-
-            n.feature = max(feature_dict, key=feature_dict.get)
-            while n.feature in selected_features:
-                feature_dict.pop(n.feature)
-                n.feature = max(feature_dict, key=feature_dict.get)
-            selected_features.append(n.feature)
-
             n.split(impurity)
             print(n.feature)
             for child in n.children:
