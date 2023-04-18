@@ -197,14 +197,20 @@ class DecisionNode:
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        if np.count_nonzero(self.data[:, -1] == 'p') == 0:
-            pred = 'complete e'
-        elif np.count_nonzero(self.data[:, -1] == 'e') == 0:
-            pred = 'complete p'
-        elif np.count_nonzero(self.data[:, -1] == 'p') > np.count_nonzero(self.data[:, -1] == 'e'):
-            pred = 'p'
+        # if np.count_nonzero(self.data[:, -1] == 'p') == 0:
+        #     pred = 'complete e'
+        # elif np.count_nonzero(self.data[:, -1] == 'e') == 0:
+        #     pred = 'complete p'
+        # elif np.count_nonzero(self.data[:, -1] == 'p') > np.count_nonzero(self.data[:, -1] == 'e'):
+        #     pred = 'p'
+        # else:
+        #     pred = 'e'
+        unique, counts = np.unique(self.data[:, -1], return_counts=True)
+        if len(unique) == 1:
+            self.pred = unique[0]
         else:
-            pred = 'e'
+            max_index = np.argmax(counts)
+            self.pred = unique[max_index]
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -281,8 +287,8 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
     root = DecisionNode(data)
     nodes_queue.put(root)
     selected_features = []
-    while not nodes_queue.empty():
 
+    while not nodes_queue.empty():
         n = nodes_queue.get()
         if perfectlyClassified(n):
             n.terminal = True
@@ -290,9 +296,11 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
             feature_dict = {}
             for feature in range(n.data.shape[1] - 1):
                  feature_dict[feature], _ = goodness_of_split(data, feature, impurity, gain_ratio)
-            n.feature = max(feature_dict, key=feature_dict.get)
-            if(len(selected_features)) == 20:
+
+            if len(selected_features) == data.shape[1] - 1:
                 break
+
+            n.feature = max(feature_dict, key=feature_dict.get)
             while n.feature in selected_features:
                 feature_dict.pop(n.feature)
                 n.feature = max(feature_dict, key=feature_dict.get)
