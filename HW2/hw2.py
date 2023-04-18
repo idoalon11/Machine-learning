@@ -256,7 +256,7 @@ class DecisionNode:
                 best_attribute = feature
                 best_attribute_dict = current_feature_dict
 
-        self.feature = best_attribute
+        # self.feature = best_attribute
 
         # create the corresponding children
         for value, data in best_attribute_dict.items():
@@ -290,15 +290,13 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
 
     while not nodes_queue.empty():
         n = nodes_queue.get()
-        if perfectlyClassified(n):
+        if perfectlyClassified(n) or len(selected_features) == data.shape[1] - 1:
             n.terminal = True
         else:
             feature_dict = {}
             for feature in range(n.data.shape[1] - 1):
                  feature_dict[feature], _ = goodness_of_split(data, feature, impurity, gain_ratio)
 
-            if len(selected_features) == data.shape[1] - 1:
-                break
 
             n.feature = max(feature_dict, key=feature_dict.get)
             while n.feature in selected_features:
@@ -307,7 +305,7 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
             selected_features.append(n.feature)
 
             n.split(impurity)
-
+            print(n.feature)
             for child in n.children:
                 nodes_queue.put(child)
 
