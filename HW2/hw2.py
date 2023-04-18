@@ -185,6 +185,7 @@ class DecisionNode:
         self.chi = chi
         self.max_depth = max_depth # the maximum allowed depth of the tree
         self.gain_ratio = gain_ratio
+        self.selected_feature = []
 
     def calc_node_pred(self):
         """
@@ -197,14 +198,6 @@ class DecisionNode:
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        # if np.count_nonzero(self.data[:, -1] == 'p') == 0:
-        #     pred = 'complete e'
-        # elif np.count_nonzero(self.data[:, -1] == 'e') == 0:
-        #     pred = 'complete p'
-        # elif np.count_nonzero(self.data[:, -1] == 'p') > np.count_nonzero(self.data[:, -1] == 'e'):
-        #     pred = 'p'
-        # else:
-        #     pred = 'e'
         unique, counts = np.unique(self.data[:, -1], return_counts=True)
         if len(unique) == 1:
             self.pred = unique[0]
@@ -248,17 +241,19 @@ class DecisionNode:
         for i in range(self.data.shape[1] - 1):
             feature_dict[i] = goodness_of_split(self.data, i, impurity_func, self.gain_ratio)
 
-        self.feature = max(feature_dict, key=feature_dict.get)
-        # while self.feature in selected_features:
-        #     feature_dict.pop(self.feature)
-        #     self.feature = max(feature_dict, key=feature_dict.get)
-        # selected_features.append(self.feature)
+        self.feature = max(feature_dict, key=lambda x: feature_dict[x][0])
+        while self.feature in self.selected_feature:
+            feature_dict.pop(self.feature)
+            self.feature = max(feature_dict, key=lambda x: feature_dict[x][0])
+
+        self.selected_feature.append(self.feature)
 
         # create the corresponding children
         for key, value in feature_dict[self.feature][1].items():
             new_child = DecisionNode(value)
             self.add_child(new_child, key)
             new_child.depth = self.depth + 1
+            new_child.selected_feature = self.selected_feature
 
 
 def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
@@ -285,7 +280,7 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
 
     while not nodes_queue.empty():
         n = nodes_queue.get()
-        if perfectlyClassified(n): #or len(selected_features) == data.shape[1] - 1:
+        if perfectlyClassified(n) or n.depth == max_depth or len(n.selected_feature) == 21:
             n.terminal = True
         else:
             n.split(impurity)
