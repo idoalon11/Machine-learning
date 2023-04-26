@@ -185,7 +185,6 @@ class DecisionNode:
         self.chi = chi
         self.max_depth = max_depth # the maximum allowed depth of the tree
         self.gain_ratio = gain_ratio
-        self.selected_feature = []
 
     def calc_node_pred(self):
         """
@@ -242,19 +241,38 @@ class DecisionNode:
             feature_dict[i] = goodness_of_split(self.data, i, impurity_func, self.gain_ratio)
 
         self.feature = max(feature_dict, key=lambda x: feature_dict[x][0])
-        while self.feature in self.selected_feature:
-            feature_dict.pop(self.feature)
-            self.feature = max(feature_dict, key=lambda x: feature_dict[x][0])
 
-        self.selected_feature.append(self.feature)
+        if feature_dict[self.feature][0] == 0 or self.max_depth == self.depth:
+            self.terminal = True
+            return
+
+        if not self.chi == 1:
+            d = self.data.shape[0]
+            unique, counts = np.unique(self.data[:, -1], return_counts=True)
+            p_0 = counts[0] / d
+            p_1 = counts[1] / d
+
+            unique1, counts1 = np.unique(self.data[:, self.feature], return_counts=True)
+            list_of_values = list(zip(unique1.tolist(), counts1.tolist()))
+            sigma = 0
+            for value in list_of_values:
+                d_f = value[1]
+                unique2, counts2 = np.unique(feature_dict[self.feature][1][value[0]][:, -1], return_counts=True)
+                if not len(counts2) == 1:
+                    p_f = counts2[0]
+                    n_f = counts2[1]
+                    e_0 = d_f * p_0
+                    e_1 = d_f * p_1
+                    sigma = sigma + (((p_f - e_0) ** 2) / e_0) + (((n_f - e_1) ** 2) / e_1)
+
+            if sigma <= chi_table[len(list_of_values) - 1][self.chi]:
+                self.terminal = True
+                return
 
         # create the corresponding children
         for key, value in feature_dict[self.feature][1].items():
-            new_child = DecisionNode(value)
+            new_child = DecisionNode(value, depth=self.depth + 1, gain_ratio=self.gain_ratio, max_depth=self.max_depth, chi=self.chi)
             self.add_child(new_child, key)
-            new_child.depth = self.depth + 1
-            new_child.selected_feature = self.selected_feature.copy()
-
 
 def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
     """
@@ -275,18 +293,14 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
     # TODO: Implement the function.                                           #
     ###########################################################################
     nodes_queue = queue.Queue()
-    root = DecisionNode(data)
+    root = DecisionNode(data, gain_ratio=gain_ratio, max_depth=max_depth, chi=chi)
     nodes_queue.put(root)
 
     while not nodes_queue.empty():
         n = nodes_queue.get()
-        if perfectlyClassified(n) or n.depth == max_depth:
-            n.terminal = True
-        else:
-            n.split(impurity)
-            for child in n.children:
-                nodes_queue.put(child)
-
+        n.split(impurity)
+        for child in n.children:
+            nodes_queue.put(child)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -349,7 +363,7 @@ def calc_accuracy(node, dataset):
         if predict(node, row) == row[-1]:
             counter = counter + 1
 
-    accuracy = counter/len(dataset)
+    accuracy = counter/dataset.shape[0]
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -368,13 +382,14 @@ def depth_pruning(X_train, X_test):
     Output: the training and testing accuracies per max depth
     """
     training = []
-    testing  = []
+    testing = []
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
     for max_depth in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
-        pass
-    # implemet later
+        tree = build_tree(data=X_train, impurity=calc_entropy, gain_ratio=True, max_depth=max_depth)
+        training.append(calc_accuracy(tree, X_train))
+        testing.append(calc_accuracy(tree, X_test))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -398,13 +413,17 @@ def chi_pruning(X_train, X_test):
     - depths: the tree depth for each chi value
     """
     chi_training_acc = []
-    chi_testing_acc  = []
+    chi_testing_acc = []
     depth = []
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
-    # implement later
+    p_values_cut_off = [1, 0.5, 0.25, 0.1, 0.05, 0.0001]
+    for p in p_values_cut_off:
+        tree = build_tree(data=X_train, impurity=calc_entropy, gain_ratio=True, chi=p)
+        chi_training_acc.append(calc_accuracy(tree, X_train))
+        chi_testing_acc.append(calc_accuracy(tree, X_test))
+        depth.append(tree.depth)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################

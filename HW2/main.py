@@ -87,5 +87,9 @@ def print_tree(node, depth=0, parent_feature='ROOT', feature_val='ROOT'):
         print('{}[X{}={}, leaf]: [{}], Depth: {}'.format(depth*'  ', parent_feature, feature_val,
                                                          classes_count, node.depth))
 
-print_tree(tree_gini)
+# print_tree(tree_gini)
+
+from hw2 import chi_pruning
+
+print(chi_pruning(X_train, X_test))
 
