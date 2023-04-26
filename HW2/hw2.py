@@ -247,23 +247,30 @@ class DecisionNode:
             return
 
         if not self.chi == 1:
-            d = self.data.shape[0]
             unique, counts = np.unique(self.data[:, -1], return_counts=True)
-            p_0 = counts[0] / d
-            p_1 = counts[1] / d
+            p_0 = counts[0] / np.sum(counts)
+            p_1 = counts[1] / np.sum(counts)
 
             unique1, counts1 = np.unique(self.data[:, self.feature], return_counts=True)
             list_of_values = list(zip(unique1.tolist(), counts1.tolist()))
             sigma = 0
             for value in list_of_values:
                 d_f = value[1]
+                p_f = 0
+                n_f = 0
                 unique2, counts2 = np.unique(feature_dict[self.feature][1][value[0]][:, -1], return_counts=True)
+
                 if not len(counts2) == 1:
                     p_f = counts2[0]
                     n_f = counts2[1]
-                    e_0 = d_f * p_0
-                    e_1 = d_f * p_1
-                    sigma = sigma + (((p_f - e_0) ** 2) / e_0) + (((n_f - e_1) ** 2) / e_1)
+                elif unique2[0] == 'e':
+                    p_f = counts2[0]
+                else:
+                    n_f = counts2[0]
+
+                e_0 = d_f * p_0
+                e_1 = d_f * p_1
+                sigma = sigma + (((p_f - e_0) ** 2) / e_0) + (((n_f - e_1) ** 2) / e_1)
 
             if sigma <= chi_table[len(list_of_values) - 1][self.chi]:
                 self.terminal = True
@@ -418,16 +425,33 @@ def chi_pruning(X_train, X_test):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
+    tree = None
+
     p_values_cut_off = [1, 0.5, 0.25, 0.1, 0.05, 0.0001]
     for p in p_values_cut_off:
         tree = build_tree(data=X_train, impurity=calc_entropy, gain_ratio=True, chi=p)
         chi_training_acc.append(calc_accuracy(tree, X_train))
         chi_testing_acc.append(calc_accuracy(tree, X_test))
-        depth.append(tree.depth)
+        # find the depth of the tree
+        depth.append(find_tree_depth(tree))
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return chi_training_acc, chi_testing_acc, depth
+
+
+def find_tree_depth(root):
+    if root.terminal:
+        return 0
+
+    depth_arr = []
+    for child in root.children:
+        depth_arr.append(find_tree_depth(child))
+
+    max_depth = np.max(depth_arr) + 1
+    return max_depth
+
 
 def count_nodes(node):
     """
@@ -442,7 +466,16 @@ def count_nodes(node):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+
+    if node.terminal:
+        return 0
+
+    array = []
+
+    for child in node.children:
+        array.append(count_nodes(child))
+
+    n_nodes = np.sum(array) + 1
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
