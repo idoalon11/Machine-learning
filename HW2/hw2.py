@@ -200,10 +200,10 @@ class DecisionNode:
         ###########################################################################
         unique, counts = np.unique(self.data[:, -1], return_counts=True)
         if len(unique) == 1:
-            self.pred = unique[0]
+            pred = unique[0]
         else:
             max_index = np.argmax(counts)
-            self.pred = unique[max_index]
+            pred = unique[max_index]
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -280,7 +280,7 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
 
     while not nodes_queue.empty():
         n = nodes_queue.get()
-        if perfectlyClassified(n) or n.depth == 1000: #or len(n.selected_feature) == 21:
+        if perfectlyClassified(n) or n.depth == max_depth:
             n.terminal = True
         else:
             n.split(impurity)
@@ -313,11 +313,21 @@ def predict(root, instance):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
+    while not root.terminal:
+        value = instance[root.feature]
+        if value in root.children_values:
+            index_of_value = root.children_values.index(value)
+            root = root.children[index_of_value]
+        else:
+            break
+
+    pred = root.pred
 
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return pred
+
 
 def calc_accuracy(node, dataset):
     """
@@ -333,12 +343,17 @@ def calc_accuracy(node, dataset):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
-    # maybe to implement later
+    counter = 0
+
+    for row in dataset:
+        if predict(node, row) == row[-1]:
+            counter = counter + 1
+
+    accuracy = counter/len(dataset)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
-    return accuracy
+    return accuracy * 100
 
 def depth_pruning(X_train, X_test):
     """
