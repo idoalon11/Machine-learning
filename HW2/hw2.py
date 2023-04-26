@@ -242,44 +242,42 @@ class DecisionNode:
 
         self.feature = max(feature_dict, key=lambda x: feature_dict[x][0])
 
-        if feature_dict[self.feature][0] == 0 or self.max_depth == self.depth:
+        if feature_dict[self.feature][0] == 0 or self.max_depth == self.depth or (self.chi != 1 and check_chi_square(self, feature_dict)):
             self.terminal = True
             return
-
-        if not self.chi == 1:
-            unique, counts = np.unique(self.data[:, -1], return_counts=True)
-            p_0 = counts[0] / np.sum(counts)
-            p_1 = counts[1] / np.sum(counts)
-
-            unique1, counts1 = np.unique(self.data[:, self.feature], return_counts=True)
-            list_of_values = list(zip(unique1.tolist(), counts1.tolist()))
-            sigma = 0
-            for value in list_of_values:
-                d_f = value[1]
-                p_f = 0
-                n_f = 0
-                unique2, counts2 = np.unique(feature_dict[self.feature][1][value[0]][:, -1], return_counts=True)
-
-                if not len(counts2) == 1:
-                    p_f = counts2[0]
-                    n_f = counts2[1]
-                elif unique2[0] == 'e':
-                    p_f = counts2[0]
-                else:
-                    n_f = counts2[0]
-
-                e_0 = d_f * p_0
-                e_1 = d_f * p_1
-                sigma = sigma + (((p_f - e_0) ** 2) / e_0) + (((n_f - e_1) ** 2) / e_1)
-
-            if sigma <= chi_table[len(list_of_values) - 1][self.chi]:
-                self.terminal = True
-                return
 
         # create the corresponding children
         for key, value in feature_dict[self.feature][1].items():
             new_child = DecisionNode(value, depth=self.depth + 1, gain_ratio=self.gain_ratio, max_depth=self.max_depth, chi=self.chi)
             self.add_child(new_child, key)
+
+def check_chi_square(self, feature_dict):
+    unique, counts = np.unique(self.data[:, -1], return_counts=True)
+    p_0 = counts[0] / np.sum(counts)
+    p_1 = counts[1] / np.sum(counts)
+
+    unique1, counts1 = np.unique(self.data[:, self.feature], return_counts=True)
+    list_of_values = list(zip(unique1.tolist(), counts1.tolist()))
+    sigma = 0
+    for value in list_of_values:
+        d_f = value[1]
+        p_f = 0
+        n_f = 0
+        unique2, counts2 = np.unique(feature_dict[self.feature][1][value[0]][:, -1], return_counts=True)
+
+        if not len(counts2) == 1:
+            p_f = counts2[0]
+            n_f = counts2[1]
+        elif unique2[0] == 'e':
+            p_f = counts2[0]
+        else:
+            n_f = counts2[0]
+
+        e_0 = d_f * p_0
+        e_1 = d_f * p_1
+        sigma = sigma + (((p_f - e_0) ** 2) / e_0) + (((n_f - e_1) ** 2) / e_1)
+
+    return sigma <= chi_table[len(list_of_values) - 1][self.chi]
 
 def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
     """
@@ -434,7 +432,6 @@ def chi_pruning(X_train, X_test):
         chi_testing_acc.append(calc_accuracy(tree, X_test))
         # find the depth of the tree
         depth.append(find_tree_depth(tree))
-
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -466,9 +463,8 @@ def count_nodes(node):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-
     if node.terminal:
-        return 0
+        return 1
 
     array = []
 
