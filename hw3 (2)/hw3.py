@@ -330,9 +330,19 @@ def multi_normal_pdf(x, mean, cov):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    d = 2
-    pdf = 1 / np.sqrt(((2 * math.pi) ** d) * np.linalg.det(cov))
-    pdf = pdf * np.exp(-0.5 * (x[:-1] - mean).T * np.linalg.inv(cov) * (x[:-1] - mean))
+    # d = 2
+    # pdf = 1 / np.sqrt(((2 * math.pi) ** d) * np.linalg.det(cov))
+    # pdf = pdf * np.exp(-0.5 * (x[:-1] - mean).T * np.linalg.inv(cov) * (x[:-1] - mean))
+
+    x_features_only = np.delete(x, -1)
+    d = len(x_features_only)
+    double_pi_power = np.power(2 * np.pi, -d/2)
+    det_power = np.power(np.linalg.det(cov), -1/2)
+    x_minus_mean = x_features_only - mean
+    x_minus_mean_transpose = x_minus_mean.transpose()
+    cov_inverse = np.linalg.inv(cov)
+    e_power = np.exp((-1/2) * np.matmul(np.matmul(x_minus_mean_transpose, cov_inverse), x_minus_mean))
+    return double_pi_power * det_power * e_power
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
