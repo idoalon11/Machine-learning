@@ -330,24 +330,13 @@ def multi_normal_pdf(x, mean, cov):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    # d = 2
-    # pdf = 1 / np.sqrt(((2 * math.pi) ** d) * np.linalg.det(cov))
-    # pdf = pdf * np.exp(-0.5 * (x[:-1] - mean).T * np.linalg.inv(cov) * (x[:-1] - mean))
-
-    x_features_only = np.delete(x, -1)
-    d = len(x_features_only)
-    double_pi_power = np.power(2 * np.pi, -d/2)
-    det_power = np.power(np.linalg.det(cov), -1/2)
-    x_minus_mean = x_features_only - mean
-    x_minus_mean_transpose = x_minus_mean.transpose()
-    cov_inverse = np.linalg.inv(cov)
-    e_power = np.exp((-1/2) * np.matmul(np.matmul(x_minus_mean_transpose, cov_inverse), x_minus_mean))
-    return double_pi_power * det_power * e_power
+    d = 2
+    half_pdf = ((2 * np.pi) ** (-d/2)) * (np.linalg.det(cov) ** (-1/2))
+    pdf = half_pdf * np.exp((-1 / 2) * np.matmul(np.matmul((x[:-1] - mean).T, np.linalg.inv(cov)), (x[:-1] - mean)))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return pdf
-
 
 class MultiNormalClassDistribution():
 
@@ -428,8 +417,7 @@ class MaxPrior():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        self.ccd0 = ccd0
-        self.ccd1 = ccd1
+        pass
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -447,7 +435,7 @@ class MaxPrior():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pred = 0 if self.ccd0.get_instance_posterior(x) > self.ccd1.get_instance_posterior(x) else 1
+        pass
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
