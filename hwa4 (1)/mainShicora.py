@@ -42,75 +42,29 @@ test_set = pd.read_csv('test_set.csv')
 X_training, y_training = training_set[['x1', 'x2']].values, training_set['y'].values
 X_test, y_test = test_set[['x1', 'x2']].values, test_set['y'].values
 
-def visualize_data(X, y, title_prefix=""):
-    if title_prefix is None or title_prefix == "":
-        title_prefix = ""
-    else:
-        title_prefix = f"{title_prefix} - "
-
-    # prepare data
-    classes = np.unique(y_training)
-    X_1000 = X[:1000, :]
-    y_1000 = y[:1000]
-
-    # hist for first feature - first 1000 data points:
-    plt.figure(figsize=(8, 5))
-
-    for i in range(len(classes)):
-        data = X_1000[y_1000 == classes[i]][:, 0]
-        plt.hist(data, bins=20, alpha=0.5, label=['class={}'.format(i)])  # `density=False` would make counts
-
-    plt.xlabel('x1 feature')
-    plt.ylabel('Amount')
-    plt.title(f'{title_prefix}histogram of first 1000 data points of each class')
-    plt.grid()
-    plt.legend()
-    plt.show()
-
-    # hist for first feature - all data points:
-    plt.figure(figsize=(8, 5))
-
-    for i in range(len(classes)):
-        data = X[y == classes[i]][:, 0]
-        plt.hist(data, bins=20, alpha=0.5, label=['class={}'.format(i)])  # `density=False` would make counts
-
-    plt.xlabel('x1 feature')
-    plt.ylabel('Amount')
-    plt.title(f'{title_prefix}histogram of all data points of each class')
-    plt.grid()
-    plt.legend()
-    plt.show()
-
-    # scatter for both features - first 1000 data points:
-    plt.figure(figsize=(8, 5))
-    for i in range(len(classes)):
-        data = X_1000[y_1000 == classes[i]]
-        plt.scatter(data[:, 0], data[:, 1], label='class={}'.format(i))
-
-    plt.title(f'{title_prefix}scatter plot for first 1000 data points of each class')
-    plt.legend()
-    plt.xlabel('x1 feature units')
-    plt.ylabel('x2 feature units')
-    plt.grid()
-    plt.show()
-
-    # scatter for both features - all data points:
-    plt.figure(figsize=(8, 5))
-    for i in range(len(classes)):
-        data = X[y == classes[i]]
-        plt.scatter(data[:, 0], data[:, 1], label='class={}'.format(i))
-
-    plt.title(f'{title_prefix}scatter plot for all data points of each class')
-    plt.legend()
-    plt.xlabel('x1 feature units')
-    plt.ylabel('x2 feature units')
-    plt.grid()
-    plt.legend()
-    plt.show()
-
-visualize_data(X_training, y_training)
 lor = LogisticRegressionGD()
 lor.fit(X_training, y_training)
 
 predictions_x_train = lor.predict(X_training)
 predictions_x_test = lor.predict(X_test)
+
+
+from hw4 import cross_validation
+
+#### Your code here ####
+etas = [0.05, 0.005, 0.0005, 0.00005, 0.000005]
+epss = [0.01, 0.001, 0.0001, 0.00001, 0.000001]
+folds = 5
+
+random_state = 1
+acc_dict = {}
+for eta in etas:
+    for eps in epss:
+        lor = LogisticRegressionGD(eta=eta, eps=eps, random_state=random_state)
+        acc = cross_validation(X_training, y_training, folds, lor, random_state=random_state)
+        acc_dict[(eta, eps)] = acc
+        print(f"Accuracy with eta={eta}, eps={eps}:  {acc:.6f}")
+
+best_params = max(acc_dict, key=acc_dict.get)
+best_eta = best_params[0]
+best_eps = best_params[1]

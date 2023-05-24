@@ -132,11 +132,30 @@ def cross_validation(X, y, folds, algo, random_state):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    accuracies = []
+
+    merged_data = np.hstack((X, y[:, np.newaxis]))
+    np.random.shuffle(merged_data)
+    splited_data = np.split(merged_data, folds)
+    for i in range(folds):
+        X, y = splited_data[i][:, :-1], splited_data[i][:, -1]
+        algo.fit(X, y)
+        accuracies.append(calc_accuracy(algo, X, y))
+
+    cv_accuracy = np.average(accuracies)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return cv_accuracy
+
+def calc_accuracy(algo, X, y):
+    counter = 0
+    preds = algo.predict(X)
+    for i in range(len(preds)):
+        if preds[i] == y[i]:
+            counter = counter + 1
+
+    return counter/X.shape[0]
 
 def norm_pdf(data, mu, sigma):
     """
