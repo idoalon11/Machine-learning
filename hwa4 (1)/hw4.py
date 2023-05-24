@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 class LogisticRegressionGD(object):
@@ -173,7 +175,7 @@ def norm_pdf(data, mu, sigma):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    p = (1 / np.sqrt(2 * math.pi * (sigma ** 2))) * np.exp(-0.5 * ((data - mu) / sigma) ** 2)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -319,23 +321,30 @@ class NaiveBayesGaussian(object):
         y : array-like, shape = [n_examples]
           Target values.
         """
-        self.best_theta = theta
+        ###########################################################################
+        # TODO: Implement the function.                                           #
+        ###########################################################################
+        pass
+        ###########################################################################
+        #                             END OF YOUR CODE                            #
+        ###########################################################################
 
     def predict(self, X):
-        """Return the predicted class label"""
-        # print(self.hypothesis(self.best_theta, X))
-        if (self.hypothesis(self.best_theta, X) > 0.5): return 1
-        # if(self.hypothesis(self.best_theta, x) > 0.5): return 1
-        return 0
-
-    def compute_cost(self, X, y, theta):
-        X_hypothesis = self.hypothesis(theta, X)
-        J = np.sum(-y * np.log(X_hypothesis) - (1 - y) * np.log(1 - X_hypothesis))
-
-        return J / X.shape[0]
-
-    def hypothesis(self, theta, X):
-        return np.sum(1 / (1 + np.exp(np.matmul(-theta, X.T))))
+        """
+        Return the predicted class labels for a given instance.
+        Parameters
+        ----------
+        X : {array-like}, shape = [n_examples, n_features]
+        """
+        preds = None
+        ###########################################################################
+        # TODO: Implement the function.                                           #
+        ###########################################################################
+        pass
+        ###########################################################################
+        #                             END OF YOUR CODE                            #
+        ###########################################################################
+        return preds
 
 def model_evaluation(x_train, y_train, x_test, y_test, k, best_eta, best_eps):
     ''' 
