@@ -179,7 +179,7 @@ def norm_pdf(data, mu, sigma):
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
-    return p
+    return p[0]
 
 class EM(object):
     """
@@ -233,14 +233,15 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        self.responsibilities = []
-        for instace in data:
-            guess = []
-            for i in range(self.k):
-                r = self.weights[i] * norm_pdf(instace, self.mus[i], self.sigmas[i])
-                guess.append(r)
+        self.responsibilities = np.zeros((len(data), self.k))
 
-        self.responsibilities = np.divide(self.responsibilities)
+        for i, instance in enumerate(data):
+            for j in range(self.k):
+                r = self.weights[j] * norm_pdf(instance, self.mus[j], self.sigmas[j])
+                self.responsibilities[i, j] = r
+
+            self.responsibilities[i] = self.responsibilities[i] / np.sum(self.responsibilities[i])
+            print()
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
