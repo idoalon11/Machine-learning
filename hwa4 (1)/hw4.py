@@ -37,8 +37,6 @@ class LogisticRegressionGD(object):
         Store the theta vector in self.thetas.
         Stop the function when the difference between the previous cost and the current is less than eps
         or when you reach n_iter.
-        The learned parameters must be saved in self.theta.
-        This function has no return value.
 
         Parameters
         ----------
@@ -55,96 +53,31 @@ class LogisticRegressionGD(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        theta = np.random.random(X.shape[1] + 1)
+        theta = np.random.random(X.shape[1])
         self.theta, _ = self.efficient_gradient_descent(X, y, theta, self.eta, self.n_iter)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
 
-    def apply_bias_trick(self, X):
-        """
-        Applies the bias trick to the input data.
-
-        Input:
-        - X: Input data (m instances over n features).
-
-        Returns:
-        - X: Input data with an additional column of ones in the
-            zeroth position (m instances over n+1 features).
-        """
-        ###########################################################################
-        # TODO: Implement the bias trick by adding a column of ones to the data. #
-        ###########################################################################
-        new_ones = np.ones((len(X), 1))
-        X = np.column_stack((new_ones, X))
-        ###########################################################################
-        #                             END OF YOUR CODE                            #
-        ###########################################################################
-        return X
-
     def compute_cost(self, X, y, theta):
-        """
-        Computes the average squared difference between an observation's actual and
-        predicted values for linear regression.
-
-        Input:
-        - X: Input data (m instances over n features).
-        - y: True labels (m instances).
-        - theta: the parameters (weights) of the model being learned.
-
-        Returns:
-        - J: the cost associated with the current set of parameters (single number).
-        """
-
-        J = 0  # We use J for the cost.
-        ###########################################################################
-        # TODO: Implement the MSE cost function.                                  #
-        ###########################################################################
         h = 1 / (1 + np.exp(np.dot(-theta, X.T)))
         J = np.sum(np.dot(-y, np.log(h)) - np.dot(1 - y, np.log(1 - h))) / len(X)
-        ###########################################################################
-        #                             END OF YOUR CODE                            #
-        ###########################################################################
         return J
 
     def efficient_gradient_descent(self, X, y, theta, alpha, num_iters):
-        """
-        Learn the parameters of your model using the training set, but stop
-        the learning process once the improvement of the loss value is smaller
-        than 1e-8. This function is very similar to the gradient descent
-        function you already implemented.
-
-        Input:
-        - X: Input data (m instances over n features).
-        - y: True labels (m instances).
-        - theta: The parameters (weights) of the model being learned.
-        - alpha: The learning rate of your model.
-        - num_iters: The number of updates performed.
-
-        Returns:
-        - theta: The learned parameters of your model.
-        - J_history: the loss value for every iteration.
-        """
-
-        theta = theta.copy()  # optional: theta outside the function will not change
-        J_history = []  # Use a python list to save the cost value in every iteration
-        ###########################################################################
-        # TODO: Implement the efficient gradient descent optimization algorithm.  #
-        ###########################################################################
-        X = self.apply_bias_trick(X)
         theta = theta - alpha * (np.dot(X.T, (np.dot(X, theta) - y))) / len(X)
-        J = self.compute_cost(X, y, theta)
-        J_history.append(J)
+        self.thetas.append(theta)
+        self.Js.append(self.compute_cost(X, y, theta))
+
         for i in range(1, num_iters):
             theta = theta - alpha * (np.dot(X.T, (np.dot(X, theta) - y))) / len(X)
+            self.thetas.append(theta)
             J = self.compute_cost(X, y, theta)
-            if J_history[i - 1] - J < self.eps:
+            if self.Js[i - 1] - J < self.eps:
                 break
-            J_history.append(J)
-        ###########################################################################
-        #                             END OF YOUR CODE                            #
-        ###########################################################################
-        return theta, J_history
+            self.Js.append(J)
+
+        return theta, self.Js
 
     def predict(self, X):
         """
@@ -158,7 +91,6 @@ class LogisticRegressionGD(object):
         # TODO: Implement the function.                                           #
         ###########################################################################
         preds = []
-        X = self.apply_bias_trick(X)
         for instance in X:
             h = 1 / (1 + np.exp(np.dot(-self.theta, instance)))
             preds.append(1 if h > 0.5 else 0)
@@ -368,30 +300,23 @@ class NaiveBayesGaussian(object):
         y : array-like, shape = [n_examples]
           Target values.
         """
-        ###########################################################################
-        # TODO: Implement the function.                                           #
-        ###########################################################################
-        pass
-        ###########################################################################
-        #                             END OF YOUR CODE                            #
-        ###########################################################################
+        self.best_theta = theta
 
     def predict(self, X):
-        """
-        Return the predicted class labels for a given instance.
-        Parameters
-        ----------
-        X : {array-like}, shape = [n_examples, n_features]
-        """
-        preds = None
-        ###########################################################################
-        # TODO: Implement the function.                                           #
-        ###########################################################################
-        pass
-        ###########################################################################
-        #                             END OF YOUR CODE                            #
-        ###########################################################################
-        return preds
+        """Return the predicted class label"""
+        # print(self.hypothesis(self.best_theta, X))
+        if (self.hypothesis(self.best_theta, X) > 0.5): return 1
+        # if(self.hypothesis(self.best_theta, x) > 0.5): return 1
+        return 0
+
+    def compute_cost(self, X, y, theta):
+        X_hypothesis = self.hypothesis(theta, X)
+        J = np.sum(-y * np.log(X_hypothesis) - (1 - y) * np.log(1 - X_hypothesis))
+
+        return J / X.shape[0]
+
+    def hypothesis(self, theta, X):
+        return np.sum(1 / (1 + np.exp(np.matmul(-theta, X.T))))
 
 def model_evaluation(x_train, y_train, x_test, y_test, k, best_eta, best_eps):
     ''' 
