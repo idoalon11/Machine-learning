@@ -94,7 +94,7 @@ class LogisticRegressionGD(object):
         ###########################################################################
         preds = []
         for instance in X:
-            h = 1 / (1 + np.exp(np.dot(-self.theta, instance)))
+            h = 1 / (1 + np.exp(np.dot(-self.theta.T, instance)))
             preds.append(1 if h > 0.5 else 0)
 
         ###########################################################################
@@ -219,7 +219,9 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        self.mus = [np.mean(data)]
+        self.sigmas = [np.std(data)]
+        self.weights = [1 / self.k] * self.k
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -231,7 +233,11 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        self.responsibilities = []
+        for instace in data:
+            for i in range(self.k):
+                r = (self.weights[i] * norm_pdf(self.mus[i], self.sigmas[i])) / np.sum(self.responsibilities)
+
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -260,10 +266,22 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        for i in range(1, self.n_iter):
+            self.init_params(data)
+            self.expectation(data)
+            self.maximization(data)
+            cost = self.compute_cost(data)
+            if self.costs[i - 1] - cost < self.eps:
+                break
+            self.costs.append(cost)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
+
+    def compute_cost(self, data):
+        for i in range(self.k):
+            np.sum(-np.log(self.weights[i] * norm_pdf(data, self.mus[i], self.sigmas[i])))
+
 
     def get_dist_params(self):
         return self.weights, self.mus, self.sigmas
