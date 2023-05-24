@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 # Ignore warnings
 import warnings
+
 warnings.filterwarnings('ignore')
 # Function for ploting the decision boundaries of a model
 def plot_decision_regions(X, y, classifier, resolution=0.01, title=""):

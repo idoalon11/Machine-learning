@@ -162,6 +162,7 @@ class LogisticRegressionGD(object):
         for instance in X:
             h = 1 / (1 + np.exp(np.dot(-self.theta, instance)))
             preds.append(1 if h > 0.5 else 0)
+
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
