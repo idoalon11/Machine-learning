@@ -219,8 +219,8 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        self.mus = [np.mean(data)]
-        self.sigmas = [np.std(data)]
+        self.mus = [np.mean(data)] * self.k
+        self.sigmas = [np.std(data)] * self.k
         self.weights = [1 / self.k] * self.k
         ###########################################################################
         #                             END OF YOUR CODE                            #
@@ -235,9 +235,12 @@ class EM(object):
         ###########################################################################
         self.responsibilities = []
         for instace in data:
+            guess = []
             for i in range(self.k):
-                r = (self.weights[i] * norm_pdf(self.mus[i], self.sigmas[i])) / np.sum(self.responsibilities)
+                r = self.weights[i] * norm_pdf(instace, self.mus[i], self.sigmas[i])
+                guess.append(r)
 
+        self.responsibilities = np.divide(self.responsibilities)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
