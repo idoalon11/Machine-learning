@@ -222,7 +222,7 @@ class EM(object):
         self.mus = [np.mean(data)] * self.k
         self.sigmas = [np.std(data)] * self.k
         self.weights = [1 / self.k] * self.k
-        ###########################################################################
+         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
 
@@ -253,7 +253,10 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        for j in range(self.k):
+            self.weights[j] = np.average(self.responsibilities[:, j])
+            self.mus[j] = (1 / self.weights[j]) * np.average(self.responsibilities[:, j] * data)
+            self.sigmas[j] = (1 / self.weights[j]) * np.average(self.responsibilities[:, j] * (data - self.mus[j]) ** 2)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -270,6 +273,7 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
+        self.costs = [3]
         for i in range(1, self.n_iter):
             self.init_params(data)
             self.expectation(data)
@@ -285,8 +289,7 @@ class EM(object):
     def compute_cost(self, data):
         for i in range(self.k):
             np.sum(-np.log(self.weights[i] * norm_pdf(data, self.mus[i], self.sigmas[i])))
-
-
+        return 8
     def get_dist_params(self):
         return self.weights, self.mus, self.sigmas
 
