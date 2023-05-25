@@ -354,10 +354,53 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+
+        self.X = X
+        self.y = y
+        self.X_zero = X[y == 0]
+        self.X_one = X[y == 1]
+        self.n_examples = X.shape[0]
+        self.n_features = X.shape[1]
+        self.zero_dist_params = []
+        self.one_dist_params = []
+        self.cls_to_dist_params = {0: self.zero_dist_params, 1: self.one_dist_params}
+
+        for i in range(self.n_features):
+          # zero
+          em = EM(self.k)
+          em.fit(self.X_zero[:, i])
+          self.zero_dist_params.append(em.get_dist_params())
+
+          # one
+          em = EM(self.k)
+          em.fit(self.X_one[:, i])
+          self.one_dist_params.append(em.get_dist_params())
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
+
+    def get_prior(self, cls):
+        """
+        Returns the prior porbability of the class according to the dataset distribution.
+        """
+        return len(self.X[self.y == cls]) / len(self.X)
+
+    def get_instance_likelihood(self, x, cls):
+        likelihood = 1
+        for i in range(self.n_features):
+          feature_likelihood = 0
+          for j in range(self.k):
+            dist_params = self.cls_to_dist_params[cls][i]
+            mu = dist_params[0][j]
+            sigma = dist_params[1][j]
+            w = dist_params[2][j]
+            feature_likelihood += w * norm_pdf(x[i], mu, sigma)
+
+          likelihood *= feature_likelihood
+        return likelihood
+
+    def get_instance_posterior(self, x, cls):
+        return self.get_instance_likelihood(x, cls) * self.get_prior(cls)
 
     def predict(self, X):
         """
@@ -370,7 +413,17 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        # preds = []
+        # for x in X:
+        #     pred = 0 if self.get_instance_posterior(x) > self.get_instance_posterior(x) else 1
+        #     preds.append(pred)
+
+        number_of_predictions = len(X)
+        preds = np.zeros(number_of_predictions)
+        for i, x in enumerate(X): # loop over all instances
+            prediction = 0 if self.get_instance_posterior(x, 0) > self.get_instance_posterior(x, 1) else 1
+            preds[i] = prediction
+
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
