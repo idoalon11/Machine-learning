@@ -463,6 +463,11 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         return preds
 
+def get_accuracy(pred, data):
+    accuracy = pred == data
+    accuracy = accuracy.astype(int)
+    return np.sum(accuracy) / accuracy.shape[0]
+
 def model_evaluation(x_train, y_train, x_test, y_test, k, best_eta, best_eps):
     ''' 
     Read the full description of this function in the notebook.
@@ -496,7 +501,23 @@ def model_evaluation(x_train, y_train, x_test, y_test, k, best_eta, best_eps):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    logistic_regression = LogisticRegressionGD(eta=best_eta, eps=best_eps)
+    logistic_regression.fit(x_train, y_train)
+
+    logistic_train_predict = logistic_regression.predict(x_train)
+    logistic_test_predict = logistic_regression.predict(x_test)
+
+    lor_train_acc = get_accuracy(logistic_train_predict, y_train)
+    lor_test_acc = get_accuracy(logistic_test_predict, y_test)
+
+    naive_bayes = NaiveBayesGaussian(k)
+    naive_bayes.fit(x_train, y_train)
+
+    naive_train_predict = naive_bayes.predict(x_train)
+    naive_test_predict = naive_bayes.predict(x_test)
+
+    bayes_train_acc = get_accuracy(naive_train_predict, y_train)
+    bayes_test_acc = get_accuracy(naive_test_predict, y_test)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
