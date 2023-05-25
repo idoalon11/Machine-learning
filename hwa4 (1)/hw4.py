@@ -205,11 +205,11 @@ class EM(object):
 
         np.random.seed(self.random_state)
 
-        self.responsibilities = None
-        self.weights = None
-        self.mus = None
-        self.sigmas = None
-        self.costs = None
+        self.responsibilities = []
+        self.weights = []
+        self.mus = []
+        self.sigmas = []
+        self.costs = []
 
     # initial guesses for parameters
     def init_params(self, data):
@@ -233,14 +233,16 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
+        p = np.zeros((len(data), self.k))
         self.responsibilities = np.zeros((len(data), self.k))
 
         for i, instance in enumerate(data):
             for j in range(self.k):
-                r = self.weights[j] * np.sum(norm_pdf(instance, self.mus[j], self.sigmas[j]))
-                self.responsibilities[i, j] = r
+                r = self.weights[j] * norm_pdf(instance, self.mus[j], self.sigmas[j])
+                p[i, j] = r
 
-            self.responsibilities[i] = self.responsibilities[i] / np.sum(self.responsibilities[i])
+            sumP = np.sum(p[i], axis=0)
+            self.responsibilities[i] = p[i] / sumP
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -254,7 +256,7 @@ class EM(object):
         ###########################################################################
         for j in range(self.k):
             self.weights[j] = np.average(self.responsibilities[:, j])
-            self.mus[j] = (1 / self.weights[j]) * np.average(self.responsibilities[:, j] * data)
+            self.mus[j] = (1 / self.weights[j] * len(data)) * (self.responsibilities[:, j] * data)
             self.sigmas[j] = (1 / self.weights[j]) * np.average(self.responsibilities[:, j] * (data - self.mus[j]) ** 2)
         ###########################################################################
         #                             END OF YOUR CODE                            #
@@ -289,7 +291,7 @@ class EM(object):
         sigma = 0
         for i in range(self.k):
             sigma = sigma + np.sum(-np.log(self.weights[i] * norm_pdf(data, self.mus[i], self.sigmas[i])))
-            self.costs.append(sigma)
+        self.costs.append(sigma)
 
         return sigma
 
