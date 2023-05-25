@@ -55,31 +55,60 @@ class LogisticRegressionGD(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
+        X = self.apply_bias_trick(X)
         theta = np.random.random(X.shape[1])
         self.theta, _ = self.efficient_gradient_descent(X, y, theta, self.eta, self.n_iter)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
 
+
+    def apply_bias_trick(self, X):
+        """
+        Applies the bias trick to the input data.
+
+        Input:
+        - X: Input data (m instances over n features).
+
+        Returns:
+        - X: Input data with an additional column of ones in the
+            zeroth position (m instances over n+1 features).
+        """
+        ###########################################################################
+        # TODO: Implement the bias trick by adding a column of ones to the data. #
+        ###########################################################################
+        new_ones = np.ones((len(X), 1))
+        X = np.column_stack((new_ones, X))
+        ###########################################################################
+        #                             END OF YOUR CODE                            #
+        ###########################################################################
+        return X
+
     def compute_cost(self, X, y, theta):
-        h = 1 / (1 + np.exp(np.dot(-theta, X.T)))
+        h = self.sigmoid(np.dot(X, theta))
         J = np.sum(np.dot(-y, np.log(h)) - np.dot(1 - y, np.log(1 - h))) / len(X)
         return J
 
     def efficient_gradient_descent(self, X, y, theta, alpha, num_iters):
-        theta = theta - alpha * (np.dot(X.T, (np.dot(X, theta) - y))) / len(X)
-        self.thetas.append(theta)
-        self.Js.append(self.compute_cost(X, y, theta))
+        self.Js = []
+        J = -1
 
-        for i in range(1, num_iters):
-            theta = theta - alpha * (np.dot(X.T, (np.dot(X, theta) - y))) / len(X)
-            self.thetas.append(theta)
+        for i in range(num_iters):
+            hypothesis = self.sigmoid(np.dot(X, theta))
+            theta = theta - alpha * np.dot(X.T, hypothesis - y)
+
+            J_previous = J
             J = self.compute_cost(X, y, theta)
-            if self.Js[i - 1] - J < self.eps:
-                break
             self.Js.append(J)
 
+            if np.abs(J - J_previous) < self.eps:
+                break
+
         return theta, self.Js
+
+    def sigmoid(self, X):
+        sigmoid = 1.0 / (1 + np.exp(-X))
+        return sigmoid
 
     def predict(self, X):
         """
@@ -92,11 +121,13 @@ class LogisticRegressionGD(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
+        X = self.apply_bias_trick(X)
         preds = []
         for instance in X:
             h = 1 / (1 + np.exp(np.dot(-self.theta.T, instance)))
             preds.append(1 if h > 0.5 else 0)
 
+        preds = np.array(preds)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -136,9 +167,9 @@ def cross_validation(X, y, folds, algo, random_state):
     ###########################################################################
     accuracies = []
 
-    merged_data = np.hstack((X, y[:, np.newaxis]))
+    merged_data = np.column_stack((X, y))
     np.random.shuffle(merged_data)
-    splited_data = np.split(merged_data, folds)
+    splited_data = np.split(merged_data, folds, axis=0)
     for i in range(folds):
         X, y = splited_data[i][:, :-1], splited_data[i][:, -1]
         algo.fit(X, y)
@@ -275,6 +306,7 @@ class EM(object):
         # TODO: Implement the function.                                           #
         ###########################################################################
         self.costs = []
+
         for i in range(1, self.n_iter):
             self.init_params(data)
             self.expectation(data)
@@ -316,7 +348,9 @@ def gmm_pdf(data, weights, mus, sigmas):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    pdf = 0
+    for i in range(len(weights)):
+        pdf = pdf + np.sum(weights[i] * norm_pdf(data, mus[i], sigmas[i]))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
