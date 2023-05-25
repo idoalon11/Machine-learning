@@ -205,11 +205,11 @@ class EM(object):
 
         np.random.seed(self.random_state)
 
-        self.responsibilities = []
-        self.weights = []
-        self.mus = []
-        self.sigmas = []
-        self.costs = []
+        self.responsibilities = None
+        self.weights = None
+        self.mus = None
+        self.sigmas = None
+        self.costs = None
 
     # initial guesses for parameters
     def init_params(self, data):
@@ -222,7 +222,7 @@ class EM(object):
         self.mus = [np.mean(data)] * self.k
         self.sigmas = [np.std(data)] * self.k
         self.weights = [1 / self.k] * self.k
-         ###########################################################################
+        ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
 
@@ -233,8 +233,8 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        p = np.zeros((len(data), self.k))
         self.responsibilities = np.zeros((len(data), self.k))
+        p = np.zeros((len(data), self.k))
 
         for i, instance in enumerate(data):
             for j in range(self.k):
@@ -256,8 +256,8 @@ class EM(object):
         ###########################################################################
         for j in range(self.k):
             self.weights[j] = np.average(self.responsibilities[:, j])
-            self.mus[j] = (1 / self.weights[j] * len(data)) * (self.responsibilities[:, j] * data)
-            self.sigmas[j] = (1 / self.weights[j]) * np.average(self.responsibilities[:, j] * (data - self.mus[j]) ** 2)
+            self.mus[j] = (1 / (self.weights[j] * len(data))) * np.sum(self.responsibilities[:, j] * data)
+            self.sigmas[j] = (1 / (self.weights[j] * len(data))) * np.sum(self.responsibilities[:, j] * (data - self.mus[j]) ** 2)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
