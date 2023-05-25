@@ -179,7 +179,7 @@ def norm_pdf(data, mu, sigma):
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
-    return p[0]
+    return p
 
 class EM(object):
     """
@@ -237,11 +237,10 @@ class EM(object):
 
         for i, instance in enumerate(data):
             for j in range(self.k):
-                r = self.weights[j] * norm_pdf(instance, self.mus[j], self.sigmas[j])
+                r = self.weights[j] * np.sum(norm_pdf(instance, self.mus[j], self.sigmas[j]))
                 self.responsibilities[i, j] = r
 
             self.responsibilities[i] = self.responsibilities[i] / np.sum(self.responsibilities[i])
-            print()
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -273,7 +272,7 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        self.costs = [3]
+        self.costs = []
         for i in range(1, self.n_iter):
             self.init_params(data)
             self.expectation(data)
@@ -287,9 +286,13 @@ class EM(object):
         ###########################################################################
 
     def compute_cost(self, data):
+        sigma = 0
         for i in range(self.k):
-            np.sum(-np.log(self.weights[i] * norm_pdf(data, self.mus[i], self.sigmas[i])))
-        return 8
+            sigma = sigma + np.sum(-np.log(self.weights[i] * norm_pdf(data, self.mus[i], self.sigmas[i])))
+            self.costs.append(sigma)
+
+        return sigma
+
     def get_dist_params(self):
         return self.weights, self.mus, self.sigmas
 
