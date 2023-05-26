@@ -249,25 +249,10 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        # self.mus = [np.mean(data)] * self.k
-        # self.sigmas = [np.std(data)] * self.k
         # self.weights = [1 / self.k] * self.k
-        np.random.seed(self.random_state)
-
-        self.weights = np.random.random(self.k)
-        self.weights = self.weights / np.sum(self.weights)
-
-        mus = np.empty(self.k, )
-        sigmas = np.empty(self.k, )
-
-        data_splits = np.array(np.array_split(data, self.k))
-
-        for i in range(self.k):
-            mus[i] = np.mean(data_splits[i])
-            sigmas[i] = np.std(data_splits[i])
-
-        self.mus = mus
-        self.sigmas = sigmas
+        self.weights = np.ones(self.k) / self.k
+        self.mus = np.random.rand(self.k)
+        self.sigmas = np.random.rand(self.k)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -279,29 +264,16 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        # self.responsibilities = np.zeros((len(data), self.k))
-        # p = np.zeros((len(data), self.k))
-        #
-        # for i, instance in enumerate(data):
-        #     for j in range(self.k):
-        #         r = self.weights[j] * norm_pdf(instance, self.mus[j], self.sigmas[j])
-        #         p[i, j] = r
-        #
-        #     sumP = np.sum(p[i], axis=0)
-        #     self.responsibilities[i] = p[i] / sumP
-        # print()
+        self.responsibilities = np.zeros((len(data), self.k))
+        p = np.zeros((len(data), self.k))
 
-        self.responsibilities = np.zeros((data.shape[0], self.k))
-        likelihoods = np.zeros((data.shape[0], self.k))
+        for i, instance in enumerate(data):
+            for j in range(self.k):
+                r = self.weights[j] * norm_pdf(instance, self.mus[j], self.sigmas[j])
+                p[i, j] = r
 
-        for j in range(self.k):
-            W_k = self.weights[j]
-            normal_dist = norm_pdf(data, self.mus[j], self.sigmas[j]).flatten()
-            likelihoods[:, j] = W_k * normal_dist
-
-        dividers_list = np.sum(likelihoods, axis=1)
-
-        self.responsibilities = likelihoods / dividers_list[:, np.newaxis]
+            sumP = np.sum(p[i], axis=0)
+            self.responsibilities[i] = p[i] / sumP
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -313,31 +285,12 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        for j in range(self.k):
-            self.weights[j] = np.sum(self.responsibilities[:, j]) / self.responsibilities.shape[0]
+        self.weights = np.sum(self.responsibilities, axis=0) / len(data)
 
-        new_mus = np.zeros((data.shape[0], self.k))
-        for i in range(data.shape[0]):
-            for j in range(self.k):
-                new_mus[i][j] = self.responsibilities[i][j] * data[i]
-
-        for j in range(self.k):
-            self.mus[j] = np.sum(new_mus[:, j]) / (self.weights[j] * data.shape[0])
-
-        new_stds = np.zeros((data.shape[0], self.k))
-
-        for i in range(data.shape[0]):
-            for j in range(self.k):
-                new_stds[i][j] = self.responsibilities[i][j] * ((data[i] - self.mus[j]) ** 2)
-
-        for j in range(self.k):
-            self.sigmas[j] = np.sqrt(np.sum(new_stds[:, j]) / (self.weights[j] * data.shape[0]))
-
-        # for j in range(self.k):
-        #     self.weights[j] = np.mean(self.responsibilities[:, j])
-        #     self.mus[j] = np.sum(self.responsibilities[:, j] * data) / np.sum(self.responsibilities[:, j])
-        #     self.sigmas[j] = np.sqrt(np.sum(self.responsibilities[:, j] * (data - self.mus[j]) ** 2) / np.sum(self.responsibilities[:, j]))
-
+        for i in range(self.k):
+            self.mus[i] = np.dot(self.responsibilities[:, i], data) / np.sum(self.responsibilities[:, i])
+            self.sigmas[i] = np.sqrt(
+                np.dot(self.responsibilities[:, i], np.square(data - self.mus[i])) / (np.sum(self.responsibilities[:, i])))
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -366,7 +319,7 @@ class EM(object):
             cost = self.compute_cost(data)
             self.costs.append(cost)
 
-            if cost_previous != -1 and np.abs(cost - cost_previous) < self.eps:
+            if np.abs(cost - cost_previous) < self.eps:
                 break
 
             self.costs.append(cost)
@@ -375,13 +328,11 @@ class EM(object):
         ###########################################################################
 
     def compute_cost(self, data):
-        log_likelihoods = 0
-        for i in range(data.shape[0]):
-            sum = 0
-            for j in range(self.k):
-                sum += (self.weights[j] * norm_pdf(data[i], self.mus[j], self.sigmas[j]))
-            log_likelihoods += -np.log2(sum)
-        return log_likelihoods
+        sigma = 0
+        for x in data:
+            likelihood = [w * norm_pdf(x, mu, sigma) for w, mu, sigma in zip(self.weights, self.mus, self.sigmas)]
+            sigma += -np.log(sum(likelihood))
+        return sigma
 
     def get_dist_params(self):
         return self.weights, self.mus, self.sigmas
