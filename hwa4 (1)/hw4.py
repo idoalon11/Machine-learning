@@ -249,9 +249,25 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        self.mus = [np.mean(data)] * self.k
-        self.sigmas = [np.std(data)] * self.k
-        self.weights = [1 / self.k] * self.k
+        # self.mus = [np.mean(data)] * self.k
+        # self.sigmas = [np.std(data)] * self.k
+        # self.weights = [1 / self.k] * self.k
+        np.random.seed(self.random_state)
+
+        self.weights = np.random.random(self.k)
+        self.weights = self.weights / np.sum(self.weights)
+
+        mus = np.empty(self.k, )
+        sigmas = np.empty(self.k, )
+
+        data_splits = np.array(np.array_split(data, self.k))
+
+        for i in range(self.k):
+            mus[i] = np.mean(data_splits[i])
+            sigmas[i] = np.std(data_splits[i])
+
+        self.mus = mus
+        self.sigmas = sigmas
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -263,16 +279,29 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        self.responsibilities = np.zeros((len(data), self.k))
-        p = np.zeros((len(data), self.k))
+        # self.responsibilities = np.zeros((len(data), self.k))
+        # p = np.zeros((len(data), self.k))
+        #
+        # for i, instance in enumerate(data):
+        #     for j in range(self.k):
+        #         r = self.weights[j] * norm_pdf(instance, self.mus[j], self.sigmas[j])
+        #         p[i, j] = r
+        #
+        #     sumP = np.sum(p[i], axis=0)
+        #     self.responsibilities[i] = p[i] / sumP
+        # print()
 
-        for i, instance in enumerate(data):
-            for j in range(self.k):
-                r = self.weights[j] * norm_pdf(instance, self.mus[j], self.sigmas[j])
-                p[i, j] = r
+        self.responsibilities = np.zeros((data.shape[0], self.k))
+        likelihoods = np.zeros((data.shape[0], self.k))
 
-            sumP = np.sum(p[i], axis=0)
-            self.responsibilities[i] = p[i] / sumP
+        for j in range(self.k):
+            W_k = self.weights[j]
+            normal_dist = norm_pdf(data, self.mus[j], self.sigmas[j]).flatten()
+            likelihoods[:, j] = W_k * normal_dist
+
+        dividers_list = np.sum(likelihoods, axis=1)
+
+        self.responsibilities = likelihoods / dividers_list[:, np.newaxis]
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -285,9 +314,16 @@ class EM(object):
         # TODO: Implement the function.                                           #
         ###########################################################################
         for j in range(self.k):
-            self.weights[j] = np.average(self.responsibilities[:, j])
-            self.mus[j] = (1 / (self.weights[j] * len(data))) * np.sum(self.responsibilities[:, j] * data)
-            self.sigmas[j] = (1 / (self.weights[j] * len(data))) * np.sum(self.responsibilities[:, j] * (data - self.mus[j]) ** 2)
+            self.weights[j] = np.mean(self.responsibilities[:, j])
+            self.mus[j] = np.sum(self.responsibilities[:, j] * data) / np.sum(self.responsibilities[:, j])
+            self.sigmas[j] = np.sqrt(
+                np.sum(self.responsibilities[:, j] * (data - self.mus[j]) ** 2) / np.sum(self.responsibilities[:, j]))
+
+        # for i in range(self.k):
+        #     self.weights[i] = np.mean(self.responsibilities[:, i])
+        #     self.mus[i] = (1 / (self.weights[i] * len(data))) * np.sum(np.dot(self.responsibilities[:, i],  data))
+        #     self.sigmas[i] = np.sqrt(
+        #         (1 / (self.weights[i] * len(data))) * np.sum(np.dot(self.responsibilities[:, i], (data - self.mus[i]) ** 2)))
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -305,26 +341,33 @@ class EM(object):
         # TODO: Implement the function.                                           #
         ###########################################################################
         self.costs = []
+        cost = -1
+        self.init_params(data)
 
         for i in range(1, self.n_iter):
-            self.init_params(data)
             self.expectation(data)
             self.maximization(data)
+
+            cost_previous = cost
             cost = self.compute_cost(data)
-            if self.costs[i - 1] - cost < self.eps:
+            self.costs.append(cost)
+
+            if cost_previous != -1 and np.abs(cost - cost_previous) < self.eps:
                 break
+
             self.costs.append(cost)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
 
     def compute_cost(self, data):
-        sigma = 0
-        for i in range(self.k):
-            sigma = sigma + np.sum(-np.log(self.weights[i] * norm_pdf(data, self.mus[i], self.sigmas[i])))
-        self.costs.append(sigma)
-
-        return sigma
+        log_likelihoods = 0
+        for i in range(data.shape[0]):
+            sum = 0
+            for j in range(self.k):
+                sum += (self.weights[j] * norm_pdf(data[i], self.mus[j], self.sigmas[j]))
+            log_likelihoods += -np.log2(sum)
+        return log_likelihoods
 
     def get_dist_params(self):
         return self.weights, self.mus, self.sigmas
