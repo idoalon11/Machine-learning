@@ -101,7 +101,7 @@ class LogisticRegressionGD(object):
             J = self.compute_cost(X, y, theta)
             self.Js.append(J)
 
-            if np.abs(J - J_previous) < self.eps:
+            if J != -1 and np.abs(J - J_previous) < self.eps:
                 break
 
         return theta, self.Js
@@ -166,14 +166,13 @@ def cross_validation(X, y, folds, algo, random_state):
     # TODO: Implement the function.                                           #
     ###########################################################################
     accuracies = []
-
     merged_data = np.column_stack((X, y))
     np.random.shuffle(merged_data)
     splited_data = np.split(merged_data, folds, axis=0)
     for i in range(folds):
-        X, y = splited_data[i][:, :-1], splited_data[i][:, -1]
-        algo.fit(X, y)
-        accuracies.append(calc_accuracy(algo, X, y))
+        newX, newy = splited_data[i][:, :-1], splited_data[i][:, -1]
+        algo.fit(newX, newy)
+        accuracies.append(calc_accuracy(algo, newX, newy))
 
     cv_accuracy = np.average(accuracies)
     ###########################################################################
@@ -188,7 +187,7 @@ def calc_accuracy(algo, X, y):
         if preds[i] == y[i]:
             counter = counter + 1
 
-    return counter/X.shape[0]
+    return counter/len(preds)
 
 def norm_pdf(data, mu, sigma):
     """
