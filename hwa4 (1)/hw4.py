@@ -314,16 +314,30 @@ class EM(object):
         # TODO: Implement the function.                                           #
         ###########################################################################
         for j in range(self.k):
-            self.weights[j] = np.mean(self.responsibilities[:, j])
-            self.mus[j] = np.sum(self.responsibilities[:, j] * data) / np.sum(self.responsibilities[:, j])
-            self.sigmas[j] = np.sqrt(
-                np.sum(self.responsibilities[:, j] * (data - self.mus[j]) ** 2) / np.sum(self.responsibilities[:, j]))
+            self.weights[j] = np.sum(self.responsibilities[:, j]) / self.responsibilities.shape[0]
 
-        # for i in range(self.k):
-        #     self.weights[i] = np.mean(self.responsibilities[:, i])
-        #     self.mus[i] = (1 / (self.weights[i] * len(data))) * np.sum(np.dot(self.responsibilities[:, i],  data))
-        #     self.sigmas[i] = np.sqrt(
-        #         (1 / (self.weights[i] * len(data))) * np.sum(np.dot(self.responsibilities[:, i], (data - self.mus[i]) ** 2)))
+        new_mus = np.zeros((data.shape[0], self.k))
+        for i in range(data.shape[0]):
+            for j in range(self.k):
+                new_mus[i][j] = self.responsibilities[i][j] * data[i]
+
+        for j in range(self.k):
+            self.mus[j] = np.sum(new_mus[:, j]) / (self.weights[j] * data.shape[0])
+
+        new_stds = np.zeros((data.shape[0], self.k))
+
+        for i in range(data.shape[0]):
+            for j in range(self.k):
+                new_stds[i][j] = self.responsibilities[i][j] * ((data[i] - self.mus[j]) ** 2)
+
+        for j in range(self.k):
+            self.sigmas[j] = np.sqrt(np.sum(new_stds[:, j]) / (self.weights[j] * data.shape[0]))
+
+        # for j in range(self.k):
+        #     self.weights[j] = np.mean(self.responsibilities[:, j])
+        #     self.mus[j] = np.sum(self.responsibilities[:, j] * data) / np.sum(self.responsibilities[:, j])
+        #     self.sigmas[j] = np.sqrt(np.sum(self.responsibilities[:, j] * (data - self.mus[j]) ** 2) / np.sum(self.responsibilities[:, j]))
+
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
