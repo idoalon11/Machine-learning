@@ -101,7 +101,7 @@ class LogisticRegressionGD(object):
             J = self.compute_cost(X, y, theta)
             self.Js.append(J)
 
-            if J != -1 and np.abs(J - J_previous) < self.eps:
+            if np.abs(J - J_previous) < self.eps:
                 break
 
         return theta, self.Js
@@ -249,10 +249,9 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        # self.weights = [1 / self.k] * self.k
-        self.weights = np.ones(self.k) / self.k
-        self.mus = np.random.rand(self.k)
-        self.sigmas = np.random.rand(self.k)
+        self.mus = np.random.random(self.k)
+        self.sigmas = np.random.random(self.k)
+        self.weights = [1 / self.k] * self.k
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -265,16 +264,13 @@ class EM(object):
         # TODO: Implement the function.                                           #
         ###########################################################################
         self.responsibilities = np.zeros((len(data), self.k))
-        p = np.zeros((len(data), self.k))
 
         for i, instance in enumerate(data):
             for j in range(self.k):
-                r = self.weights[j] * norm_pdf(instance, self.mus[j], self.sigmas[j])
-                p[i, j] = r
+                self.responsibilities[i, j] = self.weights[j] * norm_pdf(instance, self.mus[j], self.sigmas[j])
 
-            sumP = np.sum(p[i], axis=0)
-            self.responsibilities[i] = p[i] / sumP
-        ###########################################################################
+            self.responsibilities[i] = self.responsibilities[i] / np.sum(self.responsibilities[i], axis=0)
+            ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
 
@@ -285,12 +281,11 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        self.weights = np.sum(self.responsibilities, axis=0) / len(data)
+        self.weights = np.average(self.responsibilities, axis=0)
 
-        for i in range(self.k):
-            self.mus[i] = np.dot(self.responsibilities[:, i], data) / np.sum(self.responsibilities[:, i])
-            self.sigmas[i] = np.sqrt(
-                np.dot(self.responsibilities[:, i], np.square(data - self.mus[i])) / (np.sum(self.responsibilities[:, i])))
+        for j in range(self.k):
+            self.mus[j] = (1 / (self.weights[j] * len(data))) * np.sum(np.dot(self.responsibilities[:, j], data))
+            self.sigmas[j] = np.sqrt((1 / (self.weights[j] * len(data))) * np.sum(np.dot(self.responsibilities[:, j], np.square(data - self.mus[j]))))
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
