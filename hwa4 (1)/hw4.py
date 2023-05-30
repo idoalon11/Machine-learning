@@ -2,6 +2,49 @@ import math
 
 import numpy as np
 
+import numpy as np
+import pandas as pd
+from matplotlib.colors import ListedColormap
+import matplotlib.pyplot as plt
+
+# make matplotlib figures appear inline in the notebook
+plt.rcParams['figure.figsize'] = (10.0, 8.0) # set default size of plots
+plt.rcParams['image.interpolation'] = 'nearest'
+plt.rcParams['image.cmap'] = 'gray'
+
+# Ignore warnings
+import warnings
+warnings.filterwarnings('ignore')
+
+# Function for ploting the decision boundaries of a model
+def plot_decision_regions(X, y, classifier, resolution=0.01, title=""):
+
+    # setup marker generator and color map
+    markers = ('.', '.')
+    colors = ('blue', 'red')
+    cmap = ListedColormap(colors[:len(np.unique(y))])
+    # plot the decision surface
+    x1_min, x1_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+    x2_min, x2_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+    xx1, xx2 = np.meshgrid(np.arange(x1_min, x1_max, resolution),
+                           np.arange(x2_min, x2_max, resolution))
+    Z = classifier.predict(np.array([xx1.ravel(), xx2.ravel()]).T)
+    Z = Z.reshape(xx1.shape)
+    plt.contourf(xx1, xx2, Z, alpha=0.3, cmap=cmap)
+    plt.xlim(xx1.min(), xx1.max())
+    plt.ylim(xx2.min(), xx2.max())
+
+    for idx, cl in enumerate(np.unique(y)):
+        plt.title(title)
+        plt.scatter(x=X[y == cl, 0],
+                    y=X[y == cl, 1],
+                    alpha=0.8,
+                    c=colors[idx],
+                    marker=markers[idx],
+                    label=cl,
+                    edgecolor='black')
+    plt.show()
+
 class LogisticRegressionGD(object):
     """
     Logistic Regression Classifier using gradient descent.
@@ -526,6 +569,32 @@ def model_evaluation(x_train, y_train, x_test, y_test, k, best_eta, best_eps):
 
     bayes_train_acc = get_accuracy(naive_train_predict, y_train)
     bayes_test_acc = get_accuracy(naive_test_predict, y_test)
+
+    title_lor = "Logistic regression " + str(len(x_train))
+
+    plot_decision_regions(x_train, y_train, classifier=logistic_regression, title=title_lor)
+    logistic_regression = LogisticRegressionGD(eta=best_eta, eps=best_eps)
+    logistic_regression.fit(x_train, y_train)
+    plt.plot(range(len(logistic_regression.Js)), logistic_regression.Js)
+    plt.title("Logistic regression - first 1000 points - cost as function of iterations")
+    plt.xlabel('Iterations')
+    plt.ylabel('Cost')
+    plt.show()
+
+    title_naive = "Naive bayes " + str(len(x_train))
+    plot_decision_regions(x_train, y_train, classifier=naive_bayes, title=title_naive)
+
+    # plot_decision_regions(X_training, y_training, classifier=lor, title="Logistic regression - Full Data")
+    #
+    # # plot_decision_regions(X_training, y_training, classifier=naive_bayes, title="Naive bayes - Full Data")
+    #
+    # logistic_regression = LogisticRegressionGD(eta=best_eta, eps=best_eps)
+    # logistic_regression.fit(X_training, y_training)
+    # plt.plot(range(len(logistic_regression.Js)), logistic_regression.Js)
+    # plt.title("Logistic regression - all data - cost as function of iterations")
+    # plt.xlabel('Iterations')
+    # plt.ylabel('Cost')
+    # plt.show()
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
