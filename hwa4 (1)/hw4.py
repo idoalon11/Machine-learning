@@ -375,6 +375,12 @@ class NaiveBayesGaussian(object):
         self.random_state = random_state
         self.prior = None
 
+        # additional attributes
+        self.weights = None
+        self.mus = None
+        self.sigmas = None
+        self.classes = None
+
     def fit(self, X, y):
         """
         Fit training data.
@@ -390,53 +396,36 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
+        self.classes, counts = np.unique(y, return_counts=True)
+        # self.weights = np.ones(self.k) / self.k
+        # self.mus = np.random.rand(self.k)
+        # self.sigmas = np.random.rand(self.k)
+        #
+        # for i in range(len(self.classes)):
+        #     selected_data = X[np.where(y == self.classes[i])]
+        #     for j in range(X.shape[1]):
+        #         em = EM()
+        #         em.fit(selected_data[:, j])
+        #         self.weights, self.mus, self.sigmas = em.get_dist_params()
+        self.prior = self.get_prior(y)
 
-        self.X = X
-        self.y = y
-        self.X_zero = X[y == 0]
-        self.X_one = X[y == 1]
-        self.n_examples = X.shape[0]
-        self.n_features = X.shape[1]
-        self.zero_dist_params = []
-        self.one_dist_params = []
-        self.cls_to_dist_params = {0: self.zero_dist_params, 1: self.one_dist_params}
+        num_of_classes = len(self.classes)
+        num_of_features = X.shape[1]
 
-        for i in range(self.n_features):
-          # zero
-          em = EM(self.k)
-          em.fit(self.X_zero[:, i])
-          self.zero_dist_params.append(em.get_dist_params())
+        self.weights = np.empty([num_of_classes, num_of_features, self.k])
+        self.mus = np.empty([num_of_classes, num_of_features, self.k])
+        self.sigmas = np.empty([num_of_classes, num_of_features, self.k])
 
-          # one
-          em = EM(self.k)
-          em.fit(self.X_one[:, i])
-          self.one_dist_params.append(em.get_dist_params())
+        for i in range(num_of_classes):
+            data_by_class = X[np.where(y == self.classes[i])]
+            for j in range(X.shape[1]):
+                feature_by_class = data_by_class[:, j]
+                class_EM = EM(self.k, random_state=self.random_state)
+                class_EM.fit(feature_by_class)
+                self.weights[i][j], self.mus[i][j], self.sigmas[i][j] = class_EM.get_dist_params()
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
-
-    def get_prior(self, cls):
-        """
-        Returns the prior porbability of the class according to the dataset distribution.
-        """
-        return len(self.X[self.y == cls]) / len(self.X)
-
-    def get_instance_likelihood(self, x, cls):
-        likelihood = 1
-        for i in range(self.n_features):
-          feature_likelihood = 0
-          for j in range(self.k):
-            dist_params = self.cls_to_dist_params[cls][i]
-            mu = dist_params[0][j]
-            sigma = dist_params[1][j]
-            w = dist_params[2][j]
-            feature_likelihood += w * norm_pdf(x[i], mu, sigma)
-
-          likelihood *= feature_likelihood
-        return likelihood
-
-    def get_instance_posterior(self, x, cls):
-        return self.get_instance_likelihood(x, cls) * self.get_prior(cls)
 
     def predict(self, X):
         """
@@ -449,21 +438,38 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        # preds = []
-        # for x in X:
-        #     pred = 0 if self.get_instance_posterior(x) > self.get_instance_posterior(x) else 1
-        #     preds.append(pred)
+        num_classes = len(self.classes)
+        preds = np.empty([num_classes, len(X)])
 
-        number_of_predictions = len(X)
-        preds = np.zeros(number_of_predictions)
-        for i, x in enumerate(X): # loop over all instances
-            prediction = 0 if self.get_instance_posterior(x, 0) > self.get_instance_posterior(x, 1) else 1
-            preds[i] = prediction
+        for i in range(num_classes):
+            prior = self.prior[i]
+            likelihood = self.get_likelihood(X, i)
+            preds[i] = prior * likelihood
 
+        preds = preds[0] < preds[1]
+        preds = preds.astype(int)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
         return preds
+
+    def get_prior(self, y):
+        _, counts = np.unique(y, return_counts=True)
+        prior_sol = (counts / len(y))
+        return prior_sol
+
+    def get_likelihood(self, data, class_value):
+        likelihood = 1
+        iterations = self.mus.shape[1]
+        for i in range(iterations):
+            prob = 0
+            for j in range(self.k):
+                norm = norm_pdf(data[:, i], self.mus[class_value][i][j], self.sigmas[class_value][i][j])
+                prob = prob + self.weights[class_value][i][j] * norm
+            likelihood = likelihood * prob
+            # norm = gmm_pdf(data, self.weights[class_value][i], self.mus[class_value][i], self.sigmas[class_value][i])
+            # likelihood = likelihood * norm
+        return likelihood
 
 def get_accuracy(pred, data):
     accuracy = pred == data
