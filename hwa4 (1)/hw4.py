@@ -617,7 +617,74 @@ def generate_datasets():
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    pi = np.array([1000, 1000, 1000, 1000])
+    mu = [[20, -20, 0], [-20, 20, 0], [20, 20, 0], [-20, -20, 0]]
+    sigma = [[[16, 0, 0],
+              [0, 16, 0],
+              [0, 0, 16]],
+
+             [[16, 0, 0],
+              [0, 16, 0],
+              [0, 0, 16]],
+
+             [[16, 0, 0],
+              [0, 16, 0],
+              [0, 0, 16]],
+
+             [[16, 0, 0],
+              [0, 16, 0],
+              [0, 0, 16]]]
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    colors = ["b", "b", "y", "y"]
+
+    for i in range(len(pi)):
+        generated_data = np.random.multivariate_normal(mu[i], sigma[i], pi[i])
+        x = generated_data[:, 0]
+        y = generated_data[:, 1]
+        z = generated_data[:, 2]
+
+        dataset_a_features = [[x, y, z]]
+
+        ax.scatter(x, y, z, color=colors[i])
+        ax.xaxis.set_label_position('top')
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z')
+
+    plt.show()
+
+    # CLASS 0
+
+    y0 = np.zeros((2000, 1))
+    x_feature_class0 = np.random.normal(10, 7, 2000)
+    y_feature_class0 = x_feature_class0 * 4 + np.random.normal(10, 3, 2000)
+    z_feature_class0 = y_feature_class0 * 1.5 + np.random.normal(0, 0.5, 2000)
+    x_feature_class0 = np.reshape(x_feature_class0, (x_feature_class0.shape[0], 1))
+    y_feature_class0 = np.reshape(y_feature_class0, (y_feature_class0.shape[0], 1))
+    z_feature_class0 = np.reshape(z_feature_class0, (z_feature_class0.shape[0], 1))
+
+    # CLASS 1
+
+    y1 = np.ones((2000, 1))
+    x_feature_class1 = np.random.normal(10, 7, 2000)
+    y_feature_class1 = x_feature_class1 * 4 + np.random.normal(10, 3, 2000) + 50
+    z_feature_class1 = y_feature_class1 * 1.5 + np.random.normal(10, 3, 2000) + 40
+    x_feature_class1 = np.reshape(x_feature_class1, (x_feature_class1.shape[0], 1))
+    y_feature_class1 = np.reshape(y_feature_class1, (y_feature_class1.shape[0], 1))
+    z_feature_class1 = np.reshape(z_feature_class1, (z_feature_class1.shape[0], 1))
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(x_feature_class0, y_feature_class0, z_feature_class0, c="b")
+    ax.scatter(x_feature_class1, y_feature_class1, z_feature_class1, c="y")
+    ax.xaxis.set_label_position('top')
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
+    plt.show()
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
